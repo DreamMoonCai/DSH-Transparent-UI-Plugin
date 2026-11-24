@@ -81,7 +81,12 @@ function localTopLeft(el: HTMLElement, ancestor: HTMLElement): { x: number; y: n
 export function glassLocalRect(spot: HTMLElement): { left: number; top: number; width: number; height: number } {
   const card = spot.querySelector<HTMLElement>('[data-composer-card]')
   if (card === null) {
-    return { left: 0, top: 0, width: spot.offsetWidth, height: spot.offsetHeight }
+    // The glow overlay is absolutely positioned, so its containing block is
+    // the PADDING box — `offsetWidth/offsetHeight` would measure the border box
+    // and overshoot by the border on each side. Panes with no border see no
+    // difference; a pane that owns `overflow: auto` AND a border (the session
+    // panel) turns that overshoot into a scrollbar on every hover.
+    return { left: 0, top: 0, width: spot.clientWidth, height: spot.clientHeight }
   }
   const cardPos = localTopLeft(card, spot)
   let left = cardPos.x

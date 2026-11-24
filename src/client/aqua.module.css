@@ -964,18 +964,26 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    cards: the surface, the border, the shadow and the blur, with the scheme
    variants below.
 
+   The ring is drawn with an inset shadow, never with `border`. The host
+   reserves `border-right: 2px solid transparent` as the scrollbar's lane and
+   derives its right padding from it (`8px - 2px - scrollbar-width`) under
+   `scrollbar-gutter: stable`. Overriding the border shorthand shrank the
+   content box by the new edges and painted over that lane, so the vertical
+   scrollbar landed on the content and read as an extra bar. An inset ring
+   leaves the host's box exactly as it computed it.
+
    `overflow-x: clip` is what lets it take the same hover treatment as the
-   rest. The glow overlay is an absolutely positioned child sized from
-   `offsetWidth`, whose containing block here is the PADDING box — so it is one
-   border-width too wide on each side and, inside a card that owns
-   `overflow-y: auto`, that 2px was enough to grow a horizontal scrollbar on
-   every hover. `clip` on the x axis forbids that outright without touching the
-   vertical scrolling the sections need. ---------- */
+   rest. The glow overlay is an absolutely positioned child, so its containing
+   block here is the PADDING box, and it used to be sized from the border box
+   — one border-width too wide on each side. The overlay is now measured
+   against the padding box (see `glassLocalRect`); `clip` stays as the
+   belt-and-braces guard on the x axis without touching the vertical scrolling
+   the sections need. ---------- */
 [data-dsh-float] aside[data-session-panel] {
-  border: 1px solid rgba(19, 45, 83, 0.26);
   border-radius: 20px;
   background: var(--dsh-aqua-glass-card-light);
   box-shadow:
+    inset 0 0 0 1px rgba(19, 45, 83, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     0 10px 34px rgba(19, 45, 83, 0.16);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
@@ -992,9 +1000,9 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 [data-dsh-float] body[data-ds-dark-theme] aside[data-session-panel] {
-  border-color: rgba(148, 180, 220, 0.32);
   background: var(--dsh-aqua-glass-card-dark);
   box-shadow:
+    inset 0 0 0 1px rgba(148, 180, 220, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
     0 8px 30px rgba(2, 6, 14, 0.32);
 }

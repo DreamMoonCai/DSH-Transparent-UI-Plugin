@@ -64,7 +64,19 @@ describe('the environment card turns to glass', () => {
   it('takes the dark scheme variant', () => {
     const card = declarationsOf('[data-dsh-float] body[data-ds-dark-theme] aside[data-session-panel]')
     expect(card).toMatch(/background:\s*var\(--dsh-aqua-glass-card-dark\)/)
-    expect(card).toMatch(/border-color:\s*rgba\(148, 180, 220, 0\.32\)/)
+    expect(card).toMatch(/inset 0 0 0 1px rgba\(148, 180, 220, 0\.32\)/)
+  })
+
+  it('draws its ring without touching the border box', () => {
+    // The host reserves `border-right: 2px solid transparent` as the
+    // scrollbar's lane and derives its right padding from it
+    // (`8px - 2px - scrollbar-width`) under `scrollbar-gutter: stable`.
+    // Overriding the border shorthand shrank the content box and painted over
+    // that lane, so the vertical scrollbar landed on the content and read as an
+    // extra bar. An inset ring leaves the host's box untouched.
+    const card = declarationsOf('[data-dsh-float] aside[data-session-panel]')
+    expect(card).not.toMatch(/(^|[\n;])\s*border(-(top|right|bottom|left|width|style|color))?\s*:/)
+    expect(card).toMatch(/inset 0 0 0 1px rgba\(19, 45, 83, 0\.26\)/)
   })
 
   it('keeps the overlay presentation denser than the docked one', () => {

@@ -203,19 +203,21 @@
    the composer card's `backdrop-filter` (the "send bar won't blur what's
    behind it" bug) —content scrolls behind it sharp instead of frosted. */
 
-/* No horizontal scrollbar on the transcript scrollport.
+/* No horizontal scrollbar around the transcript.
    The hover press scales the composer slab by 1.01, and the slab is as wide
-   as the content column, so its right edge paints ~5px past the scrollport.
-   A transform counts toward the scrollable overflow region, so the stock
-   `overflow-y: auto` (which leaves the x axis computing to auto) grew a
-   horizontal scrollbar; the bar took ~5px off clientHeight, and since the
-   slab is laid against the container's bottom edge the whole column jumped up
-   5px in one frame. A layout change is not interpolatable, so no transition
-   could smooth it.
-   `clip` forbids scrolling on this axis outright (unlike `hidden`, which
-   still allows programmatic scrolling — focusing the textarea could then
-   shift the column sideways). Nothing in the transcript ever scrolls
-   sideways; the overflow is purely the painted transform. */
+   as the content column, so its right edge paints ~5px past whatever scroll
+   container holds it. A transform counts toward the scrollable overflow
+   region, so that container grows a horizontal scrollbar; the bar takes ~5px
+   off clientHeight, and since the slab is laid against the container's bottom
+   edge the whole column jumps up 5px in one frame. The bar also shows as a
+   strip along the bottom of the conversation. A layout change is not
+   interpolatable, so no transition can smooth it.
+   The container itself is not named here: its tag, its data hooks and its
+   CSS-module class all changed between 0.2.2 and 0.2.3, and each guess at the
+   name cost a release. The spotlight controller instead clips the exact
+   ancestors of the slab it is pressing (see `clipAncestors` in spotlight.ts) —
+   it already holds the element, so there is nothing to guess. This rule stays
+   for the 0.2.2 hook, which is still on the scroller there. */
 [data-dsh-aqua][data-dsh-float] [data-conversation-scroll] {
   overflow-x: clip;
 }

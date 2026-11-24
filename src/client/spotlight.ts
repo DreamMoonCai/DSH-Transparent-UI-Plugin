@@ -140,6 +140,22 @@ export function startSpotlight(): () => void {
   let session: SpotSession | null = null
   let raf = 0
   let refreshRaf = 0
+  /**
+   * Every ancestor the press widened, with the value `overflow-x` had before
+   * the press wrote `clip`. The press scales its pane by 1.01, and a transform
+   * counts toward the scrollable overflow region: on a pane as wide as the
+   * content column that paints ~5px past the scroller, the scroller grows a
+   * horizontal scrollbar, the bar eats ~5px of clientHeight, and the column —
+   * laid against that container's bottom edge — jumps up 5px in one frame.
+   *
+   * The scroller cannot be named in CSS: its tag, its data hooks and its
+   * CSS-module class all changed between 0.2.2 and 0.2.3, and each guess at
+   * the name shipped a regression. Walking up from the element the press
+   * already holds removes the guessing entirely.
+   */
+  const clipped = new Map<HTMLElement, string>()
+  /** Pending release of the clipped ancestors (see `unclipAncestors`). */
+  let unclipTimer = 0
   /** Panes currently carrying a JS-written transform (wipe only those). */
   const tilted = new WeakSet<HTMLElement>()
   /** Pending ease-back removal timers per pane (leave → neutral → cleanup). */
@@ -162,6 +178,63 @@ export function startSpotlight(): () => void {
     settle.set(spot, id)
   }
 
+  /**
+   * Forbid horizontal scrolling on every box an upward walk passes through.
+   * Only boxes that already scroll (`auto` / `scroll` on some axis) need it —
+   * `clip` on a `visible` box would start clipping content that used to spill
+   * — so everything else is left exactly as the host styled it.
+   */
+  const clipAncestors = (spot: HTMLElement): void => {
+    if (clipped.size !== 0) return
+    let node = spot.parentElement
+    while (node !== null && node !== document.body) {
+      const style = getComputedStyle(node)
+      const scrolls = [style.overflowX, style.overflowY].some(
+        (value) => value === 'auto' || value === 'scroll',
+      )
+      if (scrolls) {
+        // A re-entry during the pending release cancels it, so the ancestors
+        // stay clipped across a quick in-out-in without a scrollbar blip.
+        if (unclipTimer !== 0) {
+          clearTimeout(unclipTimer)
+          unclipTimer = 0
+        }
+        clipped.set(node, node.style.getPropertyValue('overflow-x'))
+        node.style.setProperty('overflow-x', 'clip')
+      }
+      node = node.parentElement
+    }
+  }
+
+  /** Undo `clipAncestors` so the host keeps its own scrollport between hovers. */
+  const unclipAncestors = (): void => {
+    if (unclipTimer !== 0) {
+      clearTimeout(unclipTimer)
+      unclipTimer = 0
+    }
+    for (const [node, previous] of clipped) {
+      if (previous === '') node.style.removeProperty('overflow-x')
+      else node.style.setProperty('overflow-x', previous)
+    }
+    clipped.clear()
+  }
+
+  /**
+   * Release the clipped ancestors AFTER the ease-back has finished.
+   *
+   * The glide home runs on the CSS transition, so the transform — and with it
+   * the widened paint — is still live for the whole flight. Unclipping on
+   * pointer-out would let the scrollbar come back mid-restitution, which is
+   * exactly the flicker that made the jump look intermittent.
+   */
+  const scheduleUnclip = (): void => {
+    if (unclipTimer !== 0) clearTimeout(unclipTimer)
+    unclipTimer = window.setTimeout(() => {
+      unclipTimer = 0
+      unclipAncestors()
+    }, SETTLE_MS + 40)
+  }
+
   /** Drop every effect this controller wrote onto a pane. */
   const clearSpot = (spot: HTMLElement): void => {
     spot.removeAttribute(ON_ATTR)
@@ -172,6 +245,9 @@ export function startSpotlight(): () => void {
     const glow = spot.querySelector<HTMLElement>(`:scope > [${GLOW_ATTR}]`)
     if (glow !== null) glow.style.removeProperty('background-image')
     easeBack(spot)
+    // Keep the scrollers pinned while the pane glides home — the release is
+    // scheduled past the transition (see `scheduleUnclip`).
+    scheduleUnclip()
   }
 
   /** Capture (or refresh) the hover geometry; sets the glow overlay box. */
@@ -217,6 +293,9 @@ export function startSpotlight(): () => void {
         }
       }
       if (tiltGated() && tiltable(spot)) {
+        // Pin the scrollers BEFORE the transform lands, so the widened paint
+        // never gets a chance to summon a scrollbar. See `clipAncestors`.
+        clipAncestors(spot)
         // Normalized cursor offset from the glass center, clamped to ±0.5 —
         // the official card's formula, sign-verified against its inline
         // transform: cursor right ⇒ rotateY POSITIVE, cursor TOP ⇒ rotateX
@@ -341,5 +420,6 @@ export function startSpotlight(): () => void {
         spot.style.removeProperty('transform-origin')
       }
     }
+    unclipAncestors()
   }
 }

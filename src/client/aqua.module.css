@@ -955,16 +955,14 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     0 8px 30px rgba(2, 6, 14, 0.32);
 }
 
-/* ---------- Session panel (the "环境" card on the right of the chat).
-   0.2.3 moved the environment card out of the right column into its own
-   absolutely positioned `aside[data-session-panel]` floating over the
-   transcript. The host paints it with `background: var(--dsw-alias-bg-layer-1)`
-   and `box-shadow: var(--dsw-elevation-panel)` — an opaque slab, so it stayed
-   the one panel that never turned to glass. The recipe matches the other
-   floating cards: the surface, the border, the shadow and the blur, with the
-   scheme variants below. Geometry (top/right/width/max-height) is the host's
-   own and is left untouched, and so is its `overflow-y: auto` — the card
-   scrolls its own sections. ---------- */
+/* ---------- Session panel (the "环境" card floating over the chat).
+   0.2.3 adds it as an absolutely positioned `aside[data-session-panel]` that
+   the host places from the chat gutter and sizes against the composer. The
+   host paints it with `background: var(--dsw-alias-bg-layer-1)` and
+   `box-shadow: var(--dsw-elevation-panel)` — an opaque slab, so it stayed the
+   one panel that never turned to glass. The recipe matches the other floating
+   cards: the surface, the border, the shadow and the blur, with the scheme
+   variants below. ---------- */
 [data-dsh-float] aside[data-session-panel] {
   border: 1px solid rgba(19, 45, 83, 0.26);
   border-radius: 20px;
@@ -994,6 +992,32 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: var(--dsh-aqua-glass-sticky-dark);
 }
 
+/* The panel's press is pure CSS, and deliberately NOT part of the spotlight
+   controller's pane list. That list sets `position: relative` to host the glow
+   layer (which overrode the host's `position: absolute` and dropped the card
+   into the transcript flow, landing it on the far left) and sizes the glow from
+   `offsetWidth` — inside a card that owns `overflow-y: auto`, the overlay met
+   the padding edge and grew a horizontal scrollbar. A shadow needs neither, so
+   the card keeps its positioning, its scrollport and its fixed context menu.
+   The shadow tightens onto the page: the outer spread shrinks, an inner ring
+   appears, and the card reads as pressed in without moving a single pixel. */
+[data-dsh-float] aside[data-session-panel] {
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-dsh-float] aside[data-session-panel]:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(19, 45, 83, 0.12),
+    0 3px 10px rgba(19, 45, 83, 0.2);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] aside[data-session-panel]:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(148, 180, 220, 0.16),
+    0 3px 10px rgba(2, 6, 14, 0.46);
+}
 /* The global session-header card above also matches the plugin page's title
    rows: both the main list and the "more" list use a plain <header>. On the
    main list the markup is pageBody > pageBar > header, so the row is a
@@ -1137,6 +1161,12 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    transform per frame, so the press still follows the cursor immediately. */
 [data-dsh-float][data-dsh-aqua-press] [data-dsh-aqua-spot] {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The session panel presses by shadow, so its transition rides the same clock
+   but on the property it actually animates. */
+[data-dsh-float][data-dsh-aqua-press] aside[data-session-panel] {
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---------- Settings panel glass: material-only — a fixed 50px backdrop

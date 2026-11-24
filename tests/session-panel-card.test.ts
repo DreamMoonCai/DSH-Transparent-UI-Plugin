@@ -92,3 +92,38 @@ describe('the environment card turns to glass', () => {
     expect(aquaCss).toContain('aside[data-session-panel]')
   })
 })
+
+describe('the panel presses without joining the spotlight panes', () => {
+  const stamper = readFileSync(resolve(process.cwd(), 'src/client/seam-stamper.ts'), 'utf8')
+
+  it('presses by shadow on hover', () => {
+    const press = declarationsOf("[data-dsh-float] aside[data-session-panel]:hover")
+    expect(press).toMatch(/box-shadow:/)
+    // The outer spread shrinks so the card reads as closer to the page.
+    expect(press).toMatch(/0 3px 10px/)
+    // An inner ring carries the "pushed in" cue without moving anything.
+    expect(press).toMatch(/inset 0 0 0 1px/)
+  })
+
+  it('animates the shadow on the shared press clock', () => {
+    // The transition sits in its own rule (the fill rule comes first), so the
+    // declaration is asserted against the sheet rather than one block.
+    expect(aquaCss).toContain('transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);')
+  })
+
+  it('stays out of the spotlight pane list', () => {
+    // The controller's generic pane rule sets `position: relative` to host the
+    // glow layer, which overrode the host's `position: absolute` and dropped
+    // the card into the transcript flow on the far left. The glow layer is
+    // also sized from `offsetWidth`, and inside a card that owns
+    // `overflow-y: auto` it met the padding edge and grew a horizontal
+    // scrollbar. So the panel presses by shadow and takes neither.
+    expect(stamper).not.toContain("selector: 'aside[data-session-panel]'")
+    expect(aquaCss).not.toContain('aside[data-session-panel][data-spot-on]')
+  })
+
+  it('never sets position on the card', () => {
+    // Any `position` here would replace the host's `absolute` and detach it.
+    expect(aquaCss).not.toMatch(/aside\[data-session-panel\][^{]*\{[^}]*position:/)
+  })
+})

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.5.1
 
 - Add the right workbench card to the spotlight panes: the cursor glow and the hover press now reach it, matching the sidebar, the header and the composer. The card had a glass surface but was never stamped with the `data-dsh-aqua-spot` seam the two effects key off, so it stayed inert while every other pane answered the pointer.
 - The card stands still while a dockkit pane is torn out of it: that pane is `position: fixed` and lives inside the card, so a live transform would re-anchor it, the same reason the sidebar never tilts.

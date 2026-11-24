@@ -57,8 +57,11 @@ const TILT_MAX = 0.0175
 /** Tilt perspective distance, px (official value). */
 const TILT_PERSPECTIVE = 800
 
-/** Ease-back settle time (ms) — must outlast the CSS transform transition. */
-const SETTLE_MS = 240
+/** Ease-back settle time (ms) — must outlast the CSS transform transition.
+ *  The stylesheet runs the press at 300ms, so the inline transform survives a
+ *  further 60ms before it is dropped; removing it earlier would cut the
+ *  glide home short and snap the pane back. */
+const SETTLE_MS = 360
 
 /**
  * The sidebar column (lightningcss keeps the class substring). It hosts the

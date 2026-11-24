@@ -190,6 +190,23 @@
    the composer card's `backdrop-filter` (the "send bar won't blur what's
    behind it" bug) —content scrolls behind it sharp instead of frosted. */
 
+/* No horizontal scrollbar on the transcript scrollport.
+   The hover press scales the composer slab by 1.01, and the slab is as wide
+   as the content column, so its right edge paints ~5px past the scrollport.
+   A transform counts toward the scrollable overflow region, so the stock
+   `overflow-y: auto` (which leaves the x axis computing to auto) grew a
+   horizontal scrollbar; the bar took ~5px off clientHeight, and since the
+   slab is laid against the container's bottom edge the whole column jumped up
+   5px in one frame. A layout change is not interpolatable, so no transition
+   could smooth it.
+   `clip` forbids scrolling on this axis outright (unlike `hidden`, which
+   still allows programmatic scrolling — focusing the textarea could then
+   shift the column sideways). Nothing in the transcript ever scrolls
+   sideways; the overflow is purely the painted transform. */
+[data-dsh-aqua][data-dsh-float] [data-conversation-scroll] {
+  overflow-x: clip;
+}
+
 /* Active phase: drop the composer seat's opaque bottom slab and its 36px
    fade band entirely —the base rule (`.root[data-phase='active']
    .composerSeat`) is (0,3,0), so the doubled attribute selector below must
@@ -1058,11 +1075,13 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 
 /* ---------- Hover tilt: the geometric press is JS-driven (spotlight.ts
    writes `perspective(800px) rotateX/rotateY` inline, tracking the cursor —
-   cursor right ⇒ right edge sinks, left edge lifts). A short transform
+   cursor right ⇒ right edge sinks, left edge lifts). The transform
    transition smooths both the press-in and the eased return, so the pane
-   glides into the press instead of flashing. */
+   glides into the press instead of flashing. 300ms with a symmetric
+   ease-in-out reads as a soft settle; the pointer tracking itself writes one
+   transform per frame, so the press still follows the cursor immediately. */
 [data-dsh-float][data-dsh-aqua-press] [data-dsh-aqua-spot] {
-  transition: transform 0.1s ease-out;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---------- Settings panel glass: material-only — a fixed 50px backdrop

@@ -955,6 +955,45 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     0 8px 30px rgba(2, 6, 14, 0.32);
 }
 
+/* ---------- Session panel (the "环境" card on the right of the chat).
+   0.2.3 moved the environment card out of the right column into its own
+   absolutely positioned `aside[data-session-panel]` floating over the
+   transcript. The host paints it with `background: var(--dsw-alias-bg-layer-1)`
+   and `box-shadow: var(--dsw-elevation-panel)` — an opaque slab, so it stayed
+   the one panel that never turned to glass. The recipe matches the other
+   floating cards: the surface, the border, the shadow and the blur, with the
+   scheme variants below. Geometry (top/right/width/max-height) is the host's
+   own and is left untouched, and so is its `overflow-y: auto` — the card
+   scrolls its own sections. ---------- */
+[data-dsh-float] aside[data-session-panel] {
+  border: 1px solid rgba(19, 45, 83, 0.26);
+  border-radius: 20px;
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 10px 34px rgba(19, 45, 83, 0.16);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] aside[data-session-panel] {
+  border-color: rgba(148, 180, 220, 0.32);
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 8px 30px rgba(2, 6, 14, 0.32);
+}
+
+/* The overlay presentation (narrow viewport) is the same card lifted off the
+   page, so it keeps the same glass and only the host's stronger elevation is
+   left to speak. */
+[data-dsh-float] aside[data-session-panel='overlay'] {
+  background: var(--dsh-aqua-glass-sticky-light);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] aside[data-session-panel='overlay'] {
+  background: var(--dsh-aqua-glass-sticky-dark);
+}
+
 /* The global session-header card above also matches the plugin page's title
    rows: both the main list and the "more" list use a plain <header>. On the
    main list the markup is pageBody > pageBar > header, so the row is a

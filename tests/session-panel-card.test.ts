@@ -93,37 +93,36 @@ describe('the environment card turns to glass', () => {
   })
 })
 
-describe('the panel presses without joining the spotlight panes', () => {
+describe('the panel takes the same press as the other panes', () => {
   const stamper = readFileSync(resolve(process.cwd(), 'src/client/seam-stamper.ts'), 'utf8')
+  const controller = readFileSync(resolve(process.cwd(), 'src/client/spotlight.ts'), 'utf8')
 
-  it('presses by shadow on hover', () => {
-    const press = declarationsOf("[data-dsh-float] aside[data-session-panel]:hover")
-    expect(press).toMatch(/box-shadow:/)
-    // The outer spread shrinks so the card reads as closer to the page.
-    expect(press).toMatch(/0 3px 10px/)
-    // An inner ring carries the "pushed in" cue without moving anything.
-    expect(press).toMatch(/inset 0 0 0 1px/)
+  it('is stamped as a spotlight pane', () => {
+    expect(stamper).toContain("{ attribute: 'data-dsh-aqua-spot', selector: 'aside[data-session-panel]', first: true }")
   })
 
-  it('animates the shadow on the shared press clock', () => {
-    // The transition sits in its own rule (the fill rule comes first), so the
-    // declaration is asserted against the sheet rather than one block.
-    expect(aquaCss).toContain('transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);')
+  it('clips the x axis so the glow overlay cannot grow a scrollbar', () => {
+    // The glow overlay is absolutely positioned and sized from `offsetWidth`,
+    // whose containing block here is the PADDING box — one border-width too
+    // wide on each side. Inside a card that owns `overflow-y: auto`, that 2px
+    // grew a horizontal scrollbar on every hover.
+    const card = declarationsOf('[data-dsh-float] aside[data-session-panel]')
+    expect(card).toMatch(/overflow-x:\s*clip/)
+    // The sections still scroll vertically.
+    expect(card).not.toMatch(/overflow-y:/)
   })
 
-  it('stays out of the spotlight pane list', () => {
-    // The controller's generic pane rule sets `position: relative` to host the
-    // glow layer, which overrode the host's `position: absolute` and dropped
-    // the card into the transcript flow on the far left. The glow layer is
-    // also sized from `offsetWidth`, and inside a card that owns
-    // `overflow-y: auto` it met the padding edge and grew a horizontal
-    // scrollbar. So the panel presses by shadow and takes neither.
-    expect(stamper).not.toContain("selector: 'aside[data-session-panel]'")
-    expect(aquaCss).not.toContain('aside[data-session-panel][data-spot-on]')
+  it('keeps the host position while hosting the glow', () => {
+    // The generic pane rule sets `position: relative`, which would replace the
+    // host's `absolute` and drop the card into the transcript flow.
+    const guard = declarationsOf('[data-dsh-aqua][data-dsh-aqua-spotlight] aside[data-session-panel]')
+    expect(guard).toMatch(/position:\s*absolute/)
   })
 
-  it('never sets position on the card', () => {
-    // Any `position` here would replace the host's `absolute` and detach it.
-    expect(aquaCss).not.toMatch(/aside\[data-session-panel\][^{]*\{[^}]*position:/)
+  it('stands still while a row menu is open', () => {
+    // That menu is `position: fixed` and lives inside the card, so a live
+    // transform would re-anchor it — the same reason the sidebar never tilts.
+    expect(controller).toContain("const PANEL_MENU = '[role=\"menu\"]'")
+    expect(controller).toMatch(/if \(spot\.matches\(SESSION_PANEL\) && spot\.querySelector\(PANEL_MENU\) !== null\) return false/)
   })
 })

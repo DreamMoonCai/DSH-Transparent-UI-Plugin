@@ -81,6 +81,16 @@ const RIGHTBAR_COLUMN = '[data-dsh-details]'
 /** A floated dockkit pane, fixed-positioned inside whichever card hosts it. */
 const FLOATING_PANE = '[data-dockkit-host="float"]'
 
+/**
+ * The session panel (the floating "环境" card over the transcript). It is
+ * `position: absolute` inside the transcript and owns `overflow-y: auto`, so
+ * its press needs two guards — see `tiltable` and the panel's CSS.
+ */
+const SESSION_PANEL = 'aside[data-session-panel]'
+
+/** A menu the panel opens from a row; the kit draws it `position: fixed`. */
+const PANEL_MENU = '[role="menu"]'
+
 /** The glow is live only while its gate attribute is on <html>. */
 function glowGated(): boolean {
   return document.documentElement.hasAttribute(SPOTLIGHT_ATTRIBUTE)
@@ -112,6 +122,11 @@ function tiltable(spot: HTMLElement): boolean {
   // transform would re-anchor that pane into the card. It only mounts while
   // the operator tears a tab out, so the card stands still exactly then.
   if (spot.matches(RIGHTBAR_COLUMN) && spot.querySelector(FLOATING_PANE) !== null) return false
+  // The session panel takes the same press as the other panes, with one
+  // exception: while a row menu is open, a live transform would re-anchor that
+  // `position: fixed` menu into the card. The menu only exists while it is
+  // open, so the card stands still exactly then.
+  if (spot.matches(SESSION_PANEL) && spot.querySelector(PANEL_MENU) !== null) return false
   return true
 }
 

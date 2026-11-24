@@ -56,6 +56,9 @@ const SEAMS: readonly Seam[] = [
   // The right workbench card: the third floating pane, so it takes the same
   // cursor glow and press as the other two. Stamped after the details seam.
   { attribute: 'data-dsh-aqua-spot', selector: '[data-dsh-details]', first: true },
+  // The session panel (the floating "环境" card over the transcript): the
+  // fifth glass pane, so it answers the pointer exactly like the others.
+  { attribute: 'data-dsh-aqua-spot', selector: 'aside[data-session-panel]', first: true },
   { attribute: 'data-dsh-aqua-spot', selector: '[data-dsh-surface]' },
   // The sidebar wordmark button (its badge plate gets the official pill).
   { attribute: 'data-dsh-wordmark', selector: '[class*="sidebarCol"] [class*="brand"]', first: true },

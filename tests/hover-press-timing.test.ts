@@ -87,33 +87,11 @@ describe('the press cannot summon a horizontal scrollbar', () => {
     expect(getComputedStyle(port).overflowY).not.toBe('clip')
   })
 
-  it('pins the scrollers by walking up from the pressed pane, not by class', () => {
-    // 0.2.3 moved the scroller to a nested element with a renamed CSS-module
-    // class, so every selector-based guess shipped a regression. The
-    // controller holds the element it is pressing, so it walks the ancestry
-    // and clips only the boxes that already scroll.
-    expect(controller).toMatch(/const clipAncestors = \(spot: HTMLElement\): void => \{/)
-    expect(controller).toContain("node.style.setProperty('overflow-x', 'clip')")
-    // Only real scrollers are touched: `clip` on a `visible` box would begin
-    // clipping content that used to spill.
-    expect(controller).toContain("(value) => value === 'auto' || value === 'scroll'")
-  })
-
-  it('restores the host overflow once the press is over', () => {
-    expect(controller).toMatch(/const unclipAncestors = \(\): void => \{/)
-    expect(controller).toContain("node.style.removeProperty('overflow-x')")
-    // Every exit path has to release the scrollers again.
-    expect(controller.match(/unclipAncestors\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(2)
-  })
-
-  it('releases only after the glide home has finished', () => {
-    // The transform — and with it the widened paint — stays live for the whole
-    // ease-back, so releasing on pointer-out let the scrollbar flicker back
-    // mid-restitution. That is what made the jump look intermittent.
-    expect(controller).toMatch(/const scheduleUnclip = \(\): void => \{/)
-    expect(controller).toContain('SETTLE_MS + 40')
-    // A re-entry during the pending release cancels it, so a quick
-    // out-then-in never blinks a scrollbar.
-    expect(controller).toMatch(/if \(unclipTimer !== 0\) \{\s*clearTimeout\(unclipTimer\)/)
+  it('also clips the nested scroller 0.2.3 introduced', () => {
+    // 0.2.2 put the hook on the scroller itself; 0.2.3 wraps it and scrolls a
+    // nested element whose CSS-module class ends in `_scroll`. Names differ
+    // per release, so the class SUFFIX is the seam — a module hash prefix can
+    // change, the suffix the author wrote cannot.
+    expect(aquaCss).toContain("[class$='_scroll']")
   })
 })

@@ -212,13 +212,14 @@
    edge the whole column jumps up 5px in one frame. The bar also shows as a
    strip along the bottom of the conversation. A layout change is not
    interpolatable, so no transition can smooth it.
-   The container itself is not named here: its tag, its data hooks and its
-   CSS-module class all changed between 0.2.2 and 0.2.3, and each guess at the
-   name cost a release. The spotlight controller instead clips the exact
-   ancestors of the slab it is pressing (see `clipAncestors` in spotlight.ts) —
-   it already holds the element, so there is nothing to guess. This rule stays
-   for the 0.2.2 hook, which is still on the scroller there. */
-[data-dsh-aqua][data-dsh-float] [data-conversation-scroll] {
+   Two seams, because the scroller moved between releases:
+   - `[data-conversation-scroll]` sits on the scroller itself up to 0.2.2;
+   - 0.2.3 wraps it and scrolls a nested `.V4vHZW_scroll` (a CSS-module class,
+     so it is matched by the `_scroll` suffix every release has kept).
+   `clip`, not `hidden`: `hidden` still allows programmatic scrolling, so
+   focusing the textarea could shift the column sideways. */
+[data-dsh-aqua][data-dsh-float] [data-conversation-scroll],
+[data-dsh-aqua][data-dsh-float] [class$='_scroll'] {
   overflow-x: clip;
 }
 

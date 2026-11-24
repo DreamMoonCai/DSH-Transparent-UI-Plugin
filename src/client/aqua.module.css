@@ -121,7 +121,18 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
-[data-dsh-float] [data-dsh-details] :is([class*='_tabHost_'], [class*='_pane_']) {
+/* The pane surfaces carry the host's opaque base fill, which would sit on top
+   of the card's glass. Keyed off the dockkit data attributes rather than the
+   hashed class names: 0.2.3 renames its CSS modules (the class now reads
+   `iH70Mq_tabHost`), so a class-substring selector silently stopped matching
+   and the fill reappeared as a grey slab inside the card. The host paints
+   `background: var(--dsw-alias-bg-base)` on the docked host only, so that is
+   the one to clear. */
+[data-dsh-float] [data-dsh-details] [data-dockkit-host='dock'] > section {
+  background: transparent;
+}
+
+[data-dsh-float] [data-dsh-details] [data-dockkit-empty] {
   background: transparent;
 }
 
@@ -145,8 +156,10 @@
    the pane is inset inside the glass card there is nothing to its left but
    the card's own border, so the hairline lands a dozen pixels inside the
    glass and reads as an extra column. The card border already draws that
-   edge. Scoped to the docked panel, like the inset above. */
-[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='push'] [data-dockkit-host='dock'][data-dockkit-column='0'] > :is([class*='_tabHost_'], [class*='_emptyTabHost_']) {
+   edge. Scoped to the docked panel, like the inset above, and keyed off the
+   dockkit attributes for the same class-name reason. */
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='push'] [data-dockkit-host='dock'][data-dockkit-column='0'] > section,
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='push'] [data-dockkit-empty] {
   border-left: 0;
 }
 

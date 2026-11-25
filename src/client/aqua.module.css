@@ -1133,8 +1133,12 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 [data-dsh-float] [data-dsh-stats] {
-  position: relative;
-  z-index: 8;
+  /* No `position` and no `z-index` here. The band is 24px tall inside the fused
+     slab, and the stats popover renders as a portal-free child of this row: giving
+     the row a stacking context made it the popover's containing block, so the sheet
+     was laid out inside a 24px strip and only its scrollbar showed. The fused slab
+     above already carries `position: relative` + `z-index: 8`, which is the context
+     the band needs. */
   width: calc(var(--dsh-chat-content-width) + 32px);
   max-width: none;
   margin: 0 auto;
@@ -1179,21 +1183,28 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    so the light diffuses through the translucent surface and never covers
    the content or the outline. ---------- */
 /* One rule for every pane, at the specificity the per-pane overrides below
-   already assume (0,3,0). Do NOT add a `:not(...)` guard here: it raises this
-   rule to 0,4,0 and out-ranks the session panel's own `position: absolute`
-   override at 0,3,1, which drops that card into the transcript flow and lands
-   it on the far left. */
-[data-dsh-aqua][data-dsh-aqua-spotlight] [data-dsh-aqua-spot] {
+   already assume (0,3,0). Do NOT add a plain `:not(...)` guard here: it raises
+   this rule to 0,4,0 and out-ranks the session panel's own `position: absolute`
+   override at 0,3,1, which drops that card into the transcript flow and lands it
+   on the far left.
+
+   The dialog exclusion uses `:where()`, which contributes ZERO specificity, so
+   the selector still weighs 0,3,0 and the session panel keeps its override. A
+   stamped dialog is positioned by its host and must keep that: the stats popover
+   is `position: fixed` with CSS anchor positioning, and forcing `relative` here
+   dropped it out of its anchor so it laid itself out in the page flow — it showed
+   up detached at the bottom of the window with only its scrollbar visible. */
+[data-dsh-aqua][data-dsh-aqua-spotlight] [data-dsh-aqua-spot]:where(:not([role='dialog'])) {
   position: relative;
   /* A stacking context per pane: the glow sits at z-index -1 INSIDE it. */
   isolation: isolate;
 }
 
-/* A stamped dialog is already positioned by its host — the settings sheet is
-   `relative` and the image viewer's picture is `relative` — so the generic
-   rule's `position: relative` is a no-op there. Its backdrop is never stamped
-   (see the seam stamper): that one is `fixed; inset: 0` and forcing `relative`
-   would drop it out of viewport coverage. */
+/* A stamped dialog takes the stacking context the glow needs and nothing else.
+   0,3,1 so it beats the rule above whatever its `position` turns out to be. */
+[data-dsh-aqua][data-dsh-aqua-spotlight] [role='dialog'][data-dsh-aqua-spot] {
+  isolation: isolate;
+}
 
 /* The injected glow div must never affect layout: inert by default (compat
    mode / toggle off), absolute-positioned only while the glow is on. */

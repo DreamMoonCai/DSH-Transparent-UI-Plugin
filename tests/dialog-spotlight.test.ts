@@ -85,25 +85,36 @@ describe('the image viewer keeps its own backdrop', () => {
 })
 
 describe('a dialog keeps its own positioning', () => {
-  it('leaves the pane rule free of a :not() guard', () => {
-    // The generic pane rule must stay at 0,3,0. A `:not([role='dialog'])` guard
-    // raises it to 0,4,0 and out-ranks the session panel's own
-    // `position: absolute` at 0,3,1, which drops that card into the transcript
-    // flow — it lands on the far left.
-    const generic = /\[data-dsh-aqua\]\[data-dsh-aqua-spotlight\] \[data-dsh-aqua-spot\] \{([^}]*)\}/
-      .exec(aquaCss)
-    expect(generic).not.toBeNull()
-    expect(generic![1]).toMatch(/position:\s*relative/)
-
+  it('excludes dialogs without raising the pane rule specificity', () => {
+    // The generic pane rule must stay at 0,3,0 so the session panel's own
+    // `position: absolute` override at 0,3,1 keeps winning. A plain
+    // `:not([role='dialog'])` raises it to 0,4,0 and that card lands on the far
+    // left. `:where()` contributes zero specificity, so the exclusion is free.
     const paneRule = /\[data-dsh-aqua\]\[data-dsh-aqua-spotlight\] \[data-dsh-aqua-spot\]([^{]*)\{/
       .exec(aquaCss)
-    expect(paneRule![1]).not.toContain(':not(')
+    expect(paneRule).not.toBeNull()
+    const head = paneRule![1]
+    expect(head).toContain(":where(:not([role='dialog']))")
+    // A bare :not( in the head would be the specificity bug again.
+    expect(head.replace(/:where\(:not\(\[role='dialog'\]\)\)/, '')).not.toContain(':not(')
 
     // The session panel's override must out-rank the generic rule.
     const panel = /\[data-dsh-aqua\]\[data-dsh-aqua-spotlight\] aside\[data-session-panel\] \{([^}]*)\}/
       .exec(aquaCss)
     expect(panel).not.toBeNull()
     expect(panel![1]).toMatch(/position:\s*absolute/)
+  })
+
+  it('gives a dialog the stacking context but never a position', () => {
+    // The stats popover is `position: fixed` with CSS anchor positioning. Forcing
+    // `relative` on it dropped it out of its anchor and it laid itself out in the
+    // page flow — it showed up detached at the bottom of the window with only its
+    // scrollbar visible.
+    const own = /\[data-dsh-aqua\]\[data-dsh-aqua-spotlight\] \[role='dialog'\]\[data-dsh-aqua-spot\] \{([^}]*)\}/
+      .exec(aquaCss)
+    expect(own).not.toBeNull()
+    expect(own![1]).toMatch(/isolation:\s*isolate/)
+    expect(own![1]).not.toMatch(/position:/)
   })
 
   it('does not tilt a viewport-sized dialog', () => {

@@ -142,11 +142,15 @@ export const AQUA_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-alias-markdown-code-segment-selected': { light: '#FFFFFF', dark: '#1C2A3D' },
   '--dsw-alias-markdown-code-segment-unselected': { light: '#F0F5FB', dark: '#0F1723' },
 
-  // Scrollbars.
-  '--dsw-alias-scrollbar-bg-l1': { light: 'rgba(63, 118, 216, 0.28)', dark: 'rgba(126, 164, 223, 0.28)' },
-  '--dsw-alias-scrollbar-bg-l2': { light: 'rgba(63, 118, 216, 0.4)', dark: 'rgba(126, 164, 223, 0.36)' },
-  '--dsw-alias-scrollbar-hover-l1': { light: 'rgba(63, 118, 216, 0.5)', dark: 'rgba(126, 164, 223, 0.44)' },
-  '--dsw-alias-scrollbar-hover-l2': { light: 'rgba(63, 118, 216, 0.6)', dark: 'rgba(126, 164, 223, 0.52)' },
+  // Scrollbars. Neutral ink, never the brand blue: a tinted bar reads as a
+  // control floating over the glass, while a low-alpha ink reads as the surface
+  // itself being thicker there. The geometry (a wider lane, a padded floating
+  // thumb, a specular highlight) is set in the stylesheet — see the scrollbar
+  // section in aqua.module.css.
+  '--dsw-alias-scrollbar-bg-l1': { light: 'rgba(19, 45, 83, 0.2)', dark: 'rgba(148, 180, 220, 0.24)' },
+  '--dsw-alias-scrollbar-bg-l2': { light: 'rgba(19, 45, 83, 0.28)', dark: 'rgba(148, 180, 220, 0.32)' },
+  '--dsw-alias-scrollbar-hover-l1': { light: 'rgba(19, 45, 83, 0.34)', dark: 'rgba(148, 180, 220, 0.4)' },
+  '--dsw-alias-scrollbar-hover-l2': { light: 'rgba(19, 45, 83, 0.42)', dark: 'rgba(148, 180, 220, 0.48)' },
 
   // Specific surfaces. The sidebar root fill goes transparent — the glass
   // panel styling lives on the column itself, so no double tint.

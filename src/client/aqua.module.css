@@ -1386,6 +1386,57 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: rgba(17, 26, 39, 0.55);
 }
 
+/* ---------- Scrollbars: a pane of the glass, not a control laid on top.
+
+   The host already skins them — a 5px lane, a transparent track, a pill-shaped
+   thumb reading `--dsh-scrollbar-thumb` — but this skin had pinned those four
+   tokens to the brand blue (`rgba(63, 118, 216, …)`), so every bar read as a
+   blue control floating over the glass. The tokens are neutral ink now (see
+   `theme-layer.ts`); this block gives the thumb the material the rest of the
+   skin uses.
+
+   The lane width is deliberately left at the host's 5px. Several surfaces
+   derive their padding from `--dsh-scrollbar-width` and from a 2px reserved
+   border lane, so widening the bar would shift the transcript and the composer
+   off their grid.
+
+   On the thumb: a specular gradient down its length, so it catches light the
+   way every other surface here does, and a hover that deepens the ink rather
+   than changing hue. Chromium is the only engine this runs in, so the WebKit
+   path is the whole story — the host's standard path stays for other engines. */
+[data-dsh-aqua] ::-webkit-scrollbar-thumb {
+  background-color: var(--dsh-scrollbar-thumb);
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.38),
+    rgba(255, 255, 255, 0.06) 42%,
+    transparent 72%
+  );
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+[data-dsh-aqua] ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--dsh-scrollbar-thumb-hover);
+}
+
+/* A groove only while the pointer is over the surface that owns it: at rest the
+   bar is a lone pill, which is what keeps it reading as thickness in the glass. */
+[data-dsh-aqua] *:hover::-webkit-scrollbar-track {
+  background: color-mix(in srgb, rgb(19 45 83) calc(5% * var(--dsh-aqua-frost, 1)), transparent);
+  border-radius: 999px;
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] *:hover::-webkit-scrollbar-track {
+  background: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* Both bars meeting in a corner keep the transparent track rather than the UA's
+   opaque default. */
+[data-dsh-aqua] ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 /* The bar reads the business-blue token directly: active-accent is a tint now
    (the question chip reuses it as a background), so it would be invisible here. */

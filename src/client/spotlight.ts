@@ -100,6 +100,16 @@ function fullViewport(dialog: HTMLElement): boolean {
 /** A menu the panel opens from a row; the kit draws it `position: fixed`. */
 const PANEL_MENU = '[role="menu"]'
 
+/**
+ * A main-area panel page (the plugin manager, scheduled tasks). Its class is
+ * build-hashed, so the seam is the stable `data-plugin-panel` the host stamps on
+ * the page's root `<section>`.
+ */
+const PLUGIN_PANEL = 'section[data-plugin-panel]'
+
+/** The plugin manager's "add plugin" dropdown; `position: fixed` from its trigger. */
+const PLUGIN_MENU = '[data-plugin-bar] [role="menu"], [data-plugin-panel] [role="menu"]'
+
 /** The glow is live only while its gate attribute is on <html>. */
 function glowGated(): boolean {
   return document.documentElement.hasAttribute(SPOTLIGHT_ATTRIBUTE)
@@ -145,6 +155,12 @@ function tiltable(spot: HTMLElement): boolean {
     if (fullViewport(spot)) return false
     if (spot.querySelector(PANEL_MENU) !== null) return false
   }
+  // A main-area panel page takes the same press as the other glass cards, with
+  // one exception: its toolbar opens a `position: fixed` menu from a trigger
+  // inside the page, and a live transform would re-anchor that menu into the
+  // card — the same trap as the sidebar. The menu only exists while it is open,
+  // so the card stands still exactly then.
+  if (spot.matches(PLUGIN_PANEL) && spot.querySelector(PLUGIN_MENU) !== null) return false
   return true
 }
 

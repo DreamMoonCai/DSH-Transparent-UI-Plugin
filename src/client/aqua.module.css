@@ -1311,7 +1311,10 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    The seam is the class suffix. A CSS-module name keeps its local name after the
    hash, so `_6qcDqa_balanceCard` ends in `Card` and `_6qcDqa_card` ends in
    `_card`. The parts inside a card — `cardTop`, `cardTitle`, `cardCheckbox` —
-   end differently, which is what keeps a tint from landing behind a label. */
+   end differently, which is what keeps a tint from landing behind a label.
+
+   The plugin manager's rows are not touched here: that page is a main-area
+   panel, not a sheet, so this rule never reaches it. */
 [data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])
   :is([class$='Card'], [class$='_card']) {
   background: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);

@@ -49,7 +49,17 @@ const SEAMS: readonly Seam[] = [
   // docked stats band) is ONE spot so the fused piece tilts and glows
   // together; the small + bead and chat bubbles stay out so the effect
   // reads as "the glass panes", not every surface.
-  { attribute: 'data-dsh-aqua-spot', selector: 'header', first: true },
+  //
+  // The header rule picks the conversation header, and ONLY that one. A main
+  // panel replaces the whole main column, and several of them draw their own
+  // `<header>` — the plugin manager's toolbar row is one — so an unqualified
+  // `header` matched the toolbar instead and put the glow and the press on a
+  // strip of buttons. The panel itself is stamped below, so the whole card
+  // answers the pointer and the toolbar inside it stays still.
+  { attribute: 'data-dsh-aqua-spot', selector: 'header:not([data-plugin-panel] *):not([data-global-panel] *)', first: true },
+  // A main-area panel page (plugin manager, scheduled tasks): it is one big
+  // glass card, so it takes the same glow and press as the floating panes.
+  { attribute: 'data-dsh-aqua-spot', selector: 'section[data-plugin-panel]', first: true },
   { attribute: 'data-dsh-aqua-spot', selector: '[class*="sidebarCol"]', first: true },
   { attribute: 'data-dsh-aqua-spot', selector: '[data-dsh-inputbar]' },
   { attribute: 'data-dsh-aqua-spot', selector: '[data-dsh-trajectory]' },

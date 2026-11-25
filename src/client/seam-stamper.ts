@@ -59,6 +59,19 @@ const SEAMS: readonly Seam[] = [
   // The session panel (the floating "环境" card over the transcript): the
   // fifth glass pane, so it answers the pointer exactly like the others.
   { attribute: 'data-dsh-aqua-spot', selector: 'aside[data-session-panel]', first: true },
+  // The settings sheet and the confirm panels: `role='dialog'` portals on
+  // <body> that this skin paints as glass, so they take the same glow and
+  // press as the cards.
+  //
+  // The image viewer is excluded here. Its `role='dialog'` is a full-viewport
+  // backdrop (`XwvSfW_backdrop`, `position: fixed; inset: 0`) that owns nothing
+  // but the dim; washing it with the sheet fill painted the whole window. The
+  // pane the pointer should answer is the picture inside it, stamped below.
+  { attribute: 'data-dsh-aqua-spot', selector: 'body > [role="dialog"]:not([class*="backdrop"]), body > [role="presentation"] > [role="dialog"]:not([class*="backdrop"])' },
+  // The image viewer's picture: the surface the pointer should answer in that
+  // layer. Scoped through the backdrop's own class so a settings dialog that
+  // happens to contain an image is never picked up.
+  { attribute: 'data-dsh-aqua-spot', selector: '[class*="backdrop"] img', first: true },
   { attribute: 'data-dsh-aqua-spot', selector: '[data-dsh-surface]' },
   // The sidebar wordmark button (its badge plate gets the official pill).
   { attribute: 'data-dsh-wordmark', selector: '[class*="sidebarCol"] [class*="brand"]', first: true },

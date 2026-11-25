@@ -35,7 +35,7 @@
  * of the toggles.
  */
 import {
-  closestSpot, ensureGlow, glassLocalRect, GLOW_ATTR, inside, ON_ATTR, spotElements,
+  closestSpot, ensureGlow, glassLocalRect, GLOW_ATTR, inside, ON_ATTR, replacedElement, spotElements,
   startOverlayKeeper, visualRect,
 } from './spot-core.ts'
 
@@ -88,6 +88,15 @@ const FLOATING_PANE = '[data-dockkit-host="float"]'
  */
 const SESSION_PANEL = 'aside[data-session-panel]'
 
+/** A dialog sheet (settings, confirms, the image viewer's mask). */
+const DIALOG = '[role="dialog"]'
+
+/** A dialog that covers the viewport (the image viewer's mask). */
+function fullViewport(dialog: HTMLElement): boolean {
+  const rect = dialog.getBoundingClientRect()
+  return rect.width >= window.innerWidth - 2 && rect.height >= window.innerHeight - 2
+}
+
 /** A menu the panel opens from a row; the kit draws it `position: fixed`. */
 const PANEL_MENU = '[role="menu"]'
 
@@ -127,6 +136,15 @@ function tiltable(spot: HTMLElement): boolean {
   // `position: fixed` menu into the card. The menu only exists while it is
   // open, so the card stands still exactly then.
   if (spot.matches(SESSION_PANEL) && spot.querySelector(PANEL_MENU) !== null) return false
+  // A dialog sheet tilts like the other glass. Two exceptions. The image
+  // viewer's mask IS the whole viewport, so a transform there would swing the
+  // window edges (and its `position: fixed` picture buttons along with it).
+  // And a dialog carrying its own `position: fixed` guest — a menu opened from
+  // a row inside it — re-anchors that guest, the same trap as the sidebar.
+  if (spot.matches(DIALOG)) {
+    if (fullViewport(spot)) return false
+    if (spot.querySelector(PANEL_MENU) !== null) return false
+  }
   return true
 }
 
@@ -193,7 +211,10 @@ export function startSpotlight(): () => void {
   const measure = (spot: HTMLElement): SpotSession => {
     const visual = visualRect(spot)
     const local = glassLocalRect(spot)
-    const glow = glowGated() ? ensureGlow(spot) : null
+    // A replaced element (`<img>`) renders no children, so an injected glow
+    // div inside it would never paint. The image viewer's picture is stamped
+    // for its press; skip the overlay rather than append a dead node.
+    const glow = glowGated() && !replacedElement(spot) ? ensureGlow(spot) : null
     if (glow !== null) {
       glow.style.left = `${local.left}px`
       glow.style.top = `${local.top}px`

@@ -1111,11 +1111,22 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    with the data-spot-on marker. The glow sits BEHIND the glass (z-index -1)
    so the light diffuses through the translucent surface and never covers
    the content or the outline. ---------- */
+/* One rule for every pane, at the specificity the per-pane overrides below
+   already assume (0,3,0). Do NOT add a `:not(...)` guard here: it raises this
+   rule to 0,4,0 and out-ranks the session panel's own `position: absolute`
+   override at 0,3,1, which drops that card into the transcript flow and lands
+   it on the far left. */
 [data-dsh-aqua][data-dsh-aqua-spotlight] [data-dsh-aqua-spot] {
   position: relative;
   /* A stacking context per pane: the glow sits at z-index -1 INSIDE it. */
   isolation: isolate;
 }
+
+/* A stamped dialog is already positioned by its host — the settings sheet is
+   `relative` and the image viewer's picture is `relative` — so the generic
+   rule's `position: relative` is a no-op there. Its backdrop is never stamped
+   (see the seam stamper): that one is `fixed; inset: 0` and forcing `relative`
+   would drop it out of viewport coverage. */
 
 /* The injected glow div must never affect layout: inert by default (compat
    mode / toggle off), absolute-positioned only while the glow is on. */
@@ -1162,17 +1173,47 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ---------- Settings panel glass: material-only — a fixed 50px backdrop
-   blur with a scheme-differentiated translucent fill, applied in BOTH modes
-   (the gate is data-dsh-aqua, not the float attribute). The panel keeps its
-   stock layout, tokens and radius; only the surface turns glass. The `body`
-   hop out-ranks the compat generic glass (blur 12px on `panel` classes). ---------- */
-[data-dsh-aqua] body [role='dialog'] {
+/* ---------- Dialog glass: the settings sheet and the image viewer. They are
+   styled in BOTH modes (the gate is data-dsh-aqua, not the float attribute),
+   and they are now spotlight panes too, so they take the same glow and press
+   as the cards.
+
+   The glass sits on ::before for the same reason it does on the cards: the
+   glow overlay is a z-index -1 child, and a fill painted on the element itself
+   would cover it — the light would never reach the eye. Moving the fill behind
+   also frees the element from being the backdrop root of its own contents, so
+   a dialog's inner cards finally frost the page rather than a dead flat fill.
+
+   No `position` is declared here. The settings sheet is already `relative` and
+   the viewer's mask is `fixed; inset: 0`; forcing one value would drop the
+   mask out of viewport coverage. Both already establish the containing block
+   ::before resolves against.
+
+   The blur stays at the sheet's own 50px — these sit over a dimmed page, and
+   the cards' 14px would let the transcript read straight through them. The
+   `body` hop out-ranks the compat generic glass (blur 12px on `panel`
+   classes). ---------- */
+/* The image viewer's `role='dialog'` is the full-viewport dim, not a plate, so
+   every rule below skips it. Styling it washed the whole window with the sheet
+   fill — that is what it looked like. The picture inside it is the pane the
+   pointer answers, and it is stamped separately. */
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) {
+  isolation: isolate;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
   background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(50px);
 }
 
-[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog'] {
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop'])::before {
   background: rgba(17, 26, 39, 0.55);
 }
 

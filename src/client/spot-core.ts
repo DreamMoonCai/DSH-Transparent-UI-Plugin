@@ -117,6 +117,15 @@ export function ensureGlow(spot: HTMLElement): HTMLElement {
 }
 
 /**
+ * A replaced element (`<img>`, `<video>`, …) renders no children, so a glow
+ * div appended inside it never paints. The image viewer's picture is stamped
+ * for its press alone.
+ */
+export function replacedElement(spot: HTMLElement): boolean {
+  return spot.tagName === 'IMG' || spot.tagName === 'VIDEO' || spot.tagName === 'CANVAS'
+}
+
+/**
  * One shared observer + resize feed: keeps the glow divs glued to the panes
  * through React re-renders and notifies the caller of DOM/layout changes
  * (the caller coalesces the callbacks).
@@ -124,7 +133,10 @@ export function ensureGlow(spot: HTMLElement): HTMLElement {
  */
 export function startOverlayKeeper(onChange: () => void): () => void {
   const tick = (): void => {
-    for (const spot of spotElements()) ensureGlow(spot)
+    for (const spot of spotElements()) {
+      // Replaced elements cannot host the overlay (see replacedElement).
+      if (!replacedElement(spot)) ensureGlow(spot)
+    }
     onChange()
   }
   tick()

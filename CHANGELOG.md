@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Give the settings sheet and the image viewer the same glow and press as the cards. Both are `role='dialog'` portals on `<body>` and were already glass, but neither was stamped as a spotlight pane, so the effects stopped at their edge. The dialog's glass moves onto `::before` so the z-index -1 glow can show through it. The viewer's backdrop is excluded from every fill and blur rule: it is the full-viewport dim, and painting the sheet fill on it washed the whole window. The picture inside it is stamped instead, and a replaced element is skipped by the glow overlay because an `<img>` renders no children.
+- Two dialog shapes stay still: one that covers the viewport, and one that opens its own `position: fixed` menu (a live transform would re-anchor that menu).
 - Skin native `<select>` dropdowns. The popup is drawn by the browser outside the page's own layers, so no rule could reach it and opening a route picker dropped a solid white sheet with square corners onto the glass. `appearance: base-select` now renders the picker in the page, which exposes `::picker(select)`, `option` and `::checkmark` to the same frosted recipe as the other floating surfaces. Guarded by `@supports`, so a browser without customizable selects keeps the stock control.
 - Give the picker and every other plugin's popup the same press as the panes. The picker rises from 0.96 on open and its highlighted row sinks a hair; `role='menu'` command lists, `role='listbox'` model pickers and popper cards tighten their shadow under the pointer. All of it rides the panes' 300ms clock and the one press switch.
 

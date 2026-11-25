@@ -83,6 +83,11 @@ const SEAMS: readonly Seam[] = [
   // happens to contain an image is never picked up.
   { attribute: 'data-dsh-aqua-spot', selector: '[class*="backdrop"] img', first: true },
   { attribute: 'data-dsh-aqua-spot', selector: '[data-dsh-surface]' },
+  // The "edited N files" card the transcript prints after a turn writes to
+  // disk. It is a self-contained glass card sitting in the conversation, so it
+  // takes the same glow and press as the floating panes. `data-changed-files`
+  // is the host's own attribute on its root div; the module class is hashed.
+  { attribute: 'data-dsh-aqua-spot', selector: '[data-changed-files]', first: true },
   // The sidebar wordmark button (its badge plate gets the official pill).
   { attribute: 'data-dsh-wordmark', selector: '[class*="sidebarCol"] [class*="brand"]', first: true },
 ]

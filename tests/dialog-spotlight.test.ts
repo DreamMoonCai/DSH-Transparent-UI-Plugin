@@ -117,3 +117,121 @@ describe('a dialog keeps its own positioning', () => {
     expect(controller).toMatch(/if \(spot\.matches\(DIALOG\)\) \{[\s\S]*PANEL_MENU[\s\S]*return false/)
   })
 })
+
+describe('the sheet paints its contents from its own material', () => {
+  // The dialog's rows carry solid surface tokens: a selected nav row uses
+  // `--dsw-alias-bg-layer-1`, a segmented control sits on
+  // `--dsw-alias-bg-module-platform`, an input on `--dsw-alias-bg-layer-3`.
+  // In float mode those are flat hex values, so every row landed as an opaque
+  // plate on the glass. The sheet clears them in its own scope.
+  const sheet = "[data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])"
+  const darkSheet = "[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop'])"
+
+  const tokens = [
+    '--dsw-alias-bg-layer-1',
+    '--dsw-alias-bg-layer-2',
+    '--dsw-alias-bg-layer-3',
+    '--dsw-alias-bg-module-platform',
+    '--dsw-alias-button-ghost-active-fill',
+    // The nav's selected row skips the layer tokens entirely: the settings
+    // panel paints it with this pair, which the float palette pins to a flat
+    // `#DEE9F8`. Missing them was why the first attempt showed no change.
+    '--dsw-specific-sidebar-nav-item-active',
+    '--dsw-specific-sidebar-nav-item-active-accent',
+  ]
+
+  it('re-points every solid surface token to a translucent one', () => {
+    const body = /\[data-dsh-aqua\] body \[role='dialog'\]:not\(\[class\*='backdrop'\]\) \{([^}]*)\}/.exec(aquaCss)
+    expect(body).not.toBeNull()
+    for (const token of tokens) {
+      expect(body![1]).toContain(`${token}:`)
+      // Every value must go through color-mix with the frost knob; a bare hex
+      // would be another slab.
+      const line = body![1].split('\n').find(text => text.includes(`${token}:`))!
+      expect(line).toMatch(/color-mix\(in srgb/)
+      expect(line).toMatch(/--dsh-aqua-frost/)
+    }
+  })
+
+  it('carries a dark palette for the same tokens', () => {
+    const dark = /\[data-dsh-aqua\] body\[data-ds-dark-theme\] \[role='dialog'\]:not\(\[class\*='backdrop'\]\) \{([^}]*)\}/
+      .exec(aquaCss)
+    expect(dark).not.toBeNull()
+    for (const token of tokens) expect(dark![1]).toContain(`${token}:`)
+  })
+
+  it('leaves the ink and hairlines alone', () => {
+    // Only surface fills are re-pointed; a row still needs its own label colour
+    // and its own border, or the sheet turns into flat text on a blur.
+    const body = /\[data-dsh-aqua\] body \[role='dialog'\]:not\(\[class\*='backdrop'\]\) \{([^}]*)\}/.exec(aquaCss)
+    expect(body![1]).not.toContain('--dsw-alias-label')
+    expect(body![1]).not.toContain('--dsw-alias-border')
+  })
+
+  it('covers the nav token the settings panel actually reads', () => {
+    // The panel's selected row is `.AnXs9G_navCell.AnXs9G_active` with
+    // `background: var(--dsw-specific-sidebar-nav-item-active)`. It never
+    // touches bg-layer-*, so overriding those alone changed nothing.
+    const body = /\[data-dsh-aqua\] body \[role='dialog'\]:not\(\[class\*='backdrop'\]\) \{([^}]*)\}/.exec(aquaCss)
+    expect(body![1]).toContain('--dsw-specific-sidebar-nav-item-active:')
+  })
+})
+
+describe('the selected nav row out-reads the idle one', () => {
+  // The skin separates surfaces by how much light they catch, never by hue: a
+  // selected session, a pressed card and the composer's recess all work that
+  // way. A blue pill read as a foreign element.
+  const current = "[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) nav button[aria-current='true']"
+  const currentBody = (): string =>
+    /\[data-dsh-aqua\] body \[role='dialog'\]:not\(\[class\*='backdrop'\]\) nav button\[aria-current='true'\] \{([^}]*)\}/
+      .exec(aquaCss)![1]
+
+  it('separates the row by brightness, not by a hue', () => {
+    const body = currentBody()
+    // A white pane one step above the sheet.
+    expect(body).toMatch(/background:\s*color-mix\(in srgb, rgb\(255 255 255\) calc\(\d+%/)
+    // No brand blue anywhere in the recipe: the skin has no tinted selection.
+    expect(body).not.toMatch(/rgb\(63 118 216\)/)
+  })
+
+  it('catches the light on its top edge', () => {
+    expect(currentBody()).toMatch(/inset 0 1px 0 rgba\(255, 255, 255, 0\.7\d\)/)
+  })
+
+  it('lifts off the plate with a short shadow', () => {
+    expect(currentBody()).toMatch(/0 1px 2px rgba\(19, 45, 83/)
+  })
+
+  it('draws no second ring', () => {
+    // The host autofocuses this row (`data-modal-autofocus` puts it in the
+    // modal's focus order), so it already draws the focus ring. An extra inset
+    // ring stacked into a double outline.
+    expect(currentBody()).not.toMatch(/inset 3px 0 0/)
+  })
+
+  it('raises the label weight', () => {
+    expect(currentBody()).toMatch(/font-weight:\s*600/)
+  })
+
+  it('leaves hover to the host', () => {
+    // `.AnXs9G_navCell:hover` paints `--dsw-alias-interactive-bg-hover`, an 8%
+    // ink wash that reads on both schemes. A white wash of our own was nothing
+    // over a white glass plate, and the hover feedback disappeared. The selected
+    // row out-specifies that rule by attribute, so the mark survives the cursor.
+    expect(aquaCss).not.toMatch(/nav button:not\(\[aria-current='true'\]\):hover/)
+  })
+
+  it('keys the state off aria-current, never a hashed class', () => {
+    expect(aquaCss).toContain("nav button[aria-current='true']")
+    for (const match of aquaCss.matchAll(/\[[^{}]*nav button\[aria-current='true'\][^{}]*\]\s*\{/g)) {
+      expect(match[0]).not.toMatch(/\[class[*^$]?=/)
+    }
+  })
+
+  it('carries a dark recipe too', () => {
+    const dark = /\[data-dsh-aqua\] body\[data-ds-dark-theme\] \[role='dialog'\]:not\(\[class\*='backdrop'\]\) nav button\[aria-current='true'\] \{([^}]*)\}/
+      .exec(aquaCss)
+    expect(dark).not.toBeNull()
+    expect(dark![1]).toMatch(/color-mix\(in srgb/)
+  })
+})

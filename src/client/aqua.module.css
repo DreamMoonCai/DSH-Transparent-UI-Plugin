@@ -163,6 +163,51 @@
   border-left: 0;
 }
 
+/* ---------- Workbench tab chips: the active tab is a flat opaque slab. The
+   kit paints it with `background: var(--dsw-alias-markdown-tag)`, which
+   resolves to `rgb(241, 243, 245)` in light mode (and the bluish-850 neutral
+   in dark) — a solid card that sits on top of the glass and reads as a grey
+   sticker. Re-point the token at the card's own material so the chip frosts
+   the pane it is docked in.
+
+   Keyed off `role='tab'` and the stable dockkit data attributes, never the
+   hashed module classes: 0.2.3 renamed them once already. `aria-selected`
+   carries the active state, so the kit's own `tabActive` class never has to
+   be named. ---------- */
+[data-dsh-float] [data-dsh-details] [data-dockkit-strip] [role='tab'] {
+  transition:
+    background-color 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    color 0.2s ease-out;
+}
+
+[data-dsh-float] [data-dsh-details] [data-dockkit-strip] [role='tab'][aria-selected='true'] {
+  background: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(19, 45, 83, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 1px 3px rgba(19, 45, 83, 0.1);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-dockkit-strip] [role='tab'][aria-selected='true'] {
+  background: color-mix(in srgb, rgb(34 38 47) calc(66% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 180, 220, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 3px rgba(2, 6, 14, 0.4);
+}
+
+/* An idle chip stays transparent so the card's own glass is what it reads as;
+   hovering lifts it just enough to answer the pointer. */
+[data-dsh-float] [data-dsh-details] [data-dockkit-strip] [role='tab']:hover:not([aria-selected='true']) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-dockkit-strip] [role='tab']:hover:not([aria-selected='true']) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(12% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
 /* The header card floats ABOVE the transcript: the scroll body slides up
    behind the frosted glass (negative margin) and its padding starts content
    below the card, so scrolling text passes under the header and stays
@@ -1201,6 +1246,75 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   isolation: isolate;
   background: transparent;
   backdrop-filter: none;
+  /* The sheet's own contents paint solid surface tokens: a nav row selected
+     with `--dsw-alias-bg-layer-1`, a segmented control on
+     `--dsw-alias-bg-module-platform`, an input on `--dsw-alias-bg-layer-3`.
+     In float mode those resolve to flat hex values, so every row landed as an
+     opaque plate on top of the glass. Re-point them inside the sheet so its
+     contents are cut from the same material, the way the workbench card clears
+     `--dsw-alias-bg-base` in its own scope. Hairlines and ink keep their own
+     tokens, so text stays legible. */
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(255 255 255) calc(26% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-button-ghost-active-fill: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
+  /* The nav's selected row does not use a layer token at all: the settings
+     panel paints it with `--dsw-specific-sidebar-nav-item-active`, which the
+     float palette pins to a flat `#DEE9F8`. That is the grey pill in the
+     sidebar. Covered here so the row is cut from the same glass: one step
+     brighter than the sheet, no hue. */
+  --dsw-specific-sidebar-nav-item-active: color-mix(in srgb, rgb(255 255 255) calc(72% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-specific-sidebar-nav-item-active-accent: color-mix(in srgb, rgb(255 255 255) calc(80% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* The selected nav row is a brighter pane of the same glass, not a tinted one.
+   The deep-sea skin has no accent-coloured selection anywhere else — a selected
+   session in the sidebar, a pressed card, the composer's recess all separate
+   themselves by how much light the surface catches — so a blue pill here read as
+   a foreign element.
+
+   The row sits one step above the sheet: a denser white fill, a specular line
+   along the top edge, a hairline that follows the radius, and a short drop shadow
+   that lifts it off the plate. The label goes up a weight. That is the whole
+   recipe; the state is keyed off `aria-current`, never the kit's hashed `active`
+   class.
+
+   No ring: the host autofocuses this row (`data-modal-autofocus` puts it in the
+   modal's focus order), so it already draws the focus ring, and a second inset
+   ring stacked into a double outline. */
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) nav button[aria-current='true'] {
+  background: color-mix(in srgb, rgb(255 255 255) calc(72% * var(--dsh-aqua-frost, 1)), transparent);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 0 0 1px rgba(19, 45, 83, 0.1),
+    0 1px 2px rgba(19, 45, 83, 0.08);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) nav button[aria-current='true'] {
+  background: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 0 1px rgba(148, 180, 220, 0.16),
+    0 1px 2px rgba(2, 6, 14, 0.34);
+}
+
+/* Hover is left to the host: `.AnXs9G_navCell:hover` paints
+   `--dsw-alias-interactive-bg-hover`, an 8% ink wash that reads on both schemes.
+   Replacing it with a white wash killed the feedback outright — white over a
+   white glass plate is nothing. The selected row above out-specifies that rule by
+   attribute, so pointing at an idle row never erases the current-page mark. */
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) {
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(14% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(10% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-button-ghost-active-fill: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-specific-sidebar-nav-item-active: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-specific-sidebar-nav-item-active-accent: color-mix(in srgb, rgb(226 236 250) calc(22% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 [data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])::before {

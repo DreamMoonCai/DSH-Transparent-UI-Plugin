@@ -109,11 +109,40 @@ describe('the fixed guests survive the tilt', () => {
   })
 
   it('restores them only after the transform is gone', () => {
-    // Restoring while the transition is still live re-anchors the guests for the
-    // remaining frames and they jump.
-    const restore = controller.indexOf('restoreFixedGuests()')
-    const drop = controller.indexOf("spot.style.removeProperty('transform')")
+    // Restoring while a computed transform still exists re-anchors the guests for
+    // those frames and they flash to the pane's top-left corner.
+    //
+    // Scoped to `easeBack`: the teardown path carries the same two statements, so
+    // a whole-file indexOf would compare across functions.
+    const settle = controller.slice(controller.indexOf('const id = window.setTimeout'))
+    const drop = settle.indexOf("spot.style.removeProperty('transform')")
+    const restore = settle.indexOf('restoreFixedGuests()')
+    expect(drop).toBeGreaterThan(-1)
     expect(restore).toBeGreaterThan(drop)
+  })
+
+  it('drops the transform with the transition disabled', () => {
+    // `transition: transform` is still live when the settle timer fires, so
+    // removing the property would ANIMATE identity → none for another 300ms. Those
+    // frames keep a computed transform, so the pane stays a containing block and a
+    // guest restored now lands on the pane's corner and snaps back afterwards.
+    const settle = controller.slice(controller.indexOf('const id = window.setTimeout'))
+    const at = settle.indexOf("spot.style.removeProperty('transform')")
+    expect(at).toBeGreaterThan(-1)
+    const before = settle.slice(Math.max(0, at - 300), at)
+    expect(before).toContain("spot.style.setProperty('transition', 'none')")
+    expect(settle.slice(at, at + 300)).toMatch(/void spot\.offsetWidth/)
+  })
+
+  it('cancels a queued paint frame before releasing', () => {
+    // A frame queued just before the pointer left would run after the release and
+    // write a fresh tilt back, with the guests already on their way home — the same
+    // flash from the other direction.
+    expect(controller).toMatch(/if \(raf !== 0\) \{\s*cancelAnimationFrame\(raf\)\s*raf = 0\s*\}/)
+    const cancel = controller.indexOf('cancelAnimationFrame(raf)')
+    const release = controller.indexOf('easeBack(spot)')
+    expect(cancel).toBeGreaterThan(-1)
+    expect(release).toBeGreaterThan(cancel)
   })
 })
 

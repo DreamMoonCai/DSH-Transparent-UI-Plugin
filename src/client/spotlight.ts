@@ -248,9 +248,20 @@ export function startSpotlight(): () => void {
       `perspective(${TILT_PERSPECTIVE}px) rotateX(0rad) rotateY(0rad) scale(1)`
     const id = window.setTimeout(() => {
       settle.delete(spot)
+      // The transform is identity by now, so dropping it changes nothing on
+      // screen — but `transition: transform` is still live, and removing the
+      // property ANIMATES identity → none for another 300ms. Those frames still
+      // have a computed transform, so the element stays a containing block: a
+      // fixed guest put back at this instant is re-anchored to the pane's
+      // top-left corner and only snaps back when the animation finishes (the
+      // one-frame flash past the card's corner). Snapping the removal with the
+      // transition disabled is what makes the release atomic.
+      spot.style.setProperty('transition', 'none')
       spot.style.removeProperty('transform')
       spot.style.removeProperty('transform-origin')
-      // The guests only need re-anchoring while a transform is live.
+      void spot.offsetWidth
+      spot.style.removeProperty('transition')
+      // The guests only need lifting while a transform is live.
       restoreFixedGuests()
     }, SETTLE_MS)
     settle.set(spot, id)
@@ -265,6 +276,13 @@ export function startSpotlight(): () => void {
     }
     const glow = spot.querySelector<HTMLElement>(`:scope > [${GLOW_ATTR}]`)
     if (glow !== null) glow.style.removeProperty('background-image')
+    // A frame queued before the pointer left would otherwise run after this
+    // release and write a fresh tilt back onto the pane — with its guests already
+    // on their way home, which is the same flash from the other direction.
+    if (raf !== 0) {
+      cancelAnimationFrame(raf)
+      raf = 0
+    }
     easeBack(spot)
   }
 

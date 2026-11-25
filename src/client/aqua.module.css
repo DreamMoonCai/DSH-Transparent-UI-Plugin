@@ -23,9 +23,17 @@
 }
 
 /* Host switches use brand-primary for the checked track and a white thumb.
-   The dark brand ink is near-white, so give only checked switches the
-   existing blue action fill without changing branding elsewhere. */
-[data-dsh-aqua] button[role='switch'][aria-checked='true'] {
+   The dark brand ink is near-white, so a checked switch in dark mode painted its
+   track the same colour as its thumb and the state disappeared. Give only a
+   checked switch the blue action fill, without changing branding elsewhere.
+
+   No `button` in the selector: the host renders a `button[role='switch']`, but a
+   plugin is free to render a `div[role='switch']` — the ticket assistant does —
+   and the old selector silently skipped those. The custom property is what both
+   shapes read, so widening the element match is enough; a plugin that paints its
+   track as `background: var(--dsw-alias-brand-primary)` inherits the fix without
+   knowing about it. */
+[data-dsh-aqua] [role='switch'][aria-checked='true'] {
   --dsw-alias-brand-primary: var(--dsw-alias-button-primary-fill);
 }
 

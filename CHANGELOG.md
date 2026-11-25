@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Skin native `<select>` dropdowns. The popup is drawn by the browser outside the page's own layers, so no rule could reach it and opening a route picker dropped a solid white sheet with square corners onto the glass. `appearance: base-select` now renders the picker in the page, which exposes `::picker(select)`, `option` and `::checkmark` to the same frosted recipe as the other floating surfaces. Guarded by `@supports`, so a browser without customizable selects keeps the stock control.
+- Give the picker and every other plugin's popup the same press as the panes. The picker rises from 0.96 on open and its highlighted row sinks a hair; `role='menu'` command lists, `role='listbox'` model pickers and popper cards tighten their shadow under the pointer. All of it rides the panes' 300ms clock and the one press switch.
+
 ## v1.5.1
 
 - Add the right workbench card to the spotlight panes: the cursor glow and the hover press now reach it, matching the sidebar, the header and the composer. The card had a glass surface but was never stamped with the `data-dsh-aqua-spot` seam the two effects key off, so it stayed inert while every other pane answered the pointer.

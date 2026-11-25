@@ -1207,6 +1207,152 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: color-mix(in srgb, rgb(28 32 42) calc(68% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
+/* ---------- Native `<select>`: the popup is an OS-drawn menu, so no CSS rule
+   could reach it — opening a route picker dropped a solid white sheet with
+   square corners over the glass. `appearance: base-select` makes the element
+   render its picker in the page (Chromium 135+), which exposes
+   `::picker(select)`, `option` and `::checkmark` to the same frosted recipe as
+   the other floating surfaces. The trigger keeps the plugin's own padding and
+   hairline, so a select dropped into another plugin's inline-styled form still
+   reads as part of the skin. Values live on the root tokens below so both
+   schemes and the frost knob move together. ---------- */
+[data-dsh-aqua] {
+  --dsh-aqua-select-hairline: rgba(19, 45, 83, 0.22);
+  --dsh-aqua-select-fill: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsh-aqua-select-panel: color-mix(in srgb, rgb(255 255 255) calc(76% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsh-aqua-select-shadow: rgba(19, 45, 83, 0.22);
+  --dsh-aqua-select-shadow-pressed: rgba(19, 45, 83, 0.28);
+  --dsh-aqua-select-chevron: rgba(19, 45, 83, 0.62);
+  --dsh-aqua-select-option-hover: color-mix(in srgb, rgb(110, 155, 232) 18%, transparent);
+  --dsh-aqua-select-option-checked: color-mix(in srgb, rgb(110, 155, 232) 26%, transparent);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] {
+  --dsh-aqua-select-hairline: rgba(226, 236, 250, 0.18);
+  --dsh-aqua-select-fill: color-mix(in srgb, rgb(34 38 47) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsh-aqua-select-panel: color-mix(in srgb, rgb(28 32 42) calc(80% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsh-aqua-select-shadow: rgba(0, 0, 0, 0.48);
+  --dsh-aqua-select-shadow-pressed: rgba(0, 0, 0, 0.62);
+  --dsh-aqua-select-chevron: rgba(226, 236, 250, 0.72);
+  --dsh-aqua-select-option-hover: color-mix(in srgb, rgb(120 168 240) 24%, transparent);
+  --dsh-aqua-select-option-checked: color-mix(in srgb, rgb(120 168 240) 34%, transparent);
+}
+
+@supports (appearance: base-select) {
+  [data-dsh-aqua] select,
+  [data-dsh-aqua] select::picker(select) {
+    appearance: base-select;
+  }
+
+  [data-dsh-aqua] select {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--dsh-aqua-select-hairline);
+    border-radius: 10px;
+    background: var(--dsh-aqua-select-fill);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  [data-dsh-aqua] select::picker-icon {
+    color: var(--dsh-aqua-select-chevron);
+    transition: rotate 0.2s ease;
+  }
+
+  [data-dsh-aqua] select:open::picker-icon {
+    rotate: 180deg;
+  }
+
+  /* The picker is painted in the top layer, where the page's own backdrop is
+     no longer behind it, so it carries its own frost. `margin-block` keeps a
+     gap from the trigger instead of welding the two plates together.
+
+     Its press is self-driven: `::picker()` is a pseudo-element, so the
+     controller cannot measure it and the cursor-driven tilt the cards use has
+     nothing to drive here. The plate rises from 0.96 on open (`@starting-style`
+     supplies the entry frame) and its shadow tightens under the pointer — the
+     same shadow-press the session panel uses. */
+  [data-dsh-aqua] select::picker(select) {
+    margin-block: 6px 0;
+    padding: 6px;
+    border: 1px solid var(--dsh-aqua-select-hairline);
+    border-radius: 16px;
+    background: var(--dsh-aqua-select-panel);
+    backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.4)) saturate(1.1);
+    box-shadow: 0 18px 48px var(--dsh-aqua-select-shadow);
+    max-height: min(60vh, 420px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scale: 1;
+    opacity: 1;
+    transition:
+      scale 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.24s ease-out,
+      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @starting-style {
+    [data-dsh-aqua] select::picker(select) {
+      scale: 0.96;
+      opacity: 0;
+    }
+  }
+
+  [data-dsh-aqua] select::backdrop {
+    background: transparent;
+  }
+
+  /* The rows are the only part of the picker the pointer lands on, so they
+     carry the press: the highlighted row sinks a hair. */
+  [data-dsh-aqua] select option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    transition:
+      background-color 0.2s ease-out,
+      scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  [data-dsh-aqua] select option:hover {
+    background: var(--dsh-aqua-select-option-hover);
+    scale: 0.985;
+  }
+
+  [data-dsh-aqua] select option:checked {
+    background: var(--dsh-aqua-select-option-checked);
+  }
+
+  /* The tick is the picker's own marker; pull it to the right edge so the
+     label keeps the left rail like every other row in the skin. */
+  [data-dsh-aqua] select option::checkmark {
+    order: 1;
+    margin-inline-start: auto;
+  }
+}
+
+/* ---------- Popup press: every floating list — a `role='menu'` command list,
+   a `role='listbox'` model picker, a popover card — takes the same shadow
+   press as the skin's own panes. They belong to other plugins and are
+   `position: fixed`, so they keep their geometry and their own entry
+   animation; only the elevation moves. Gated on the press switch, so one
+   toggle turns the whole family off. ---------- */
+[data-dsh-float][data-dsh-aqua-press] [role='menu'],
+[data-dsh-float][data-dsh-aqua-press] [role='listbox'],
+[data-dsh-float][data-dsh-aqua-press] [data-radix-popper-content-wrapper] {
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-dsh-float][data-dsh-aqua-press] [role='menu']:hover,
+[data-dsh-float][data-dsh-aqua-press] [role='listbox']:hover,
+[data-dsh-float][data-dsh-aqua-press] [data-radix-popper-content-wrapper]:hover {
+  box-shadow: 0 6px 18px var(--dsh-aqua-select-shadow-pressed);
+}
+
 /* ---------- Popups INSIDE the composer card: the "/" command list, the
    @ mention list and their sub-pickers. They mount in the card's own overlay
    anchor (slot conversation.input.overlay, the card's first child), so they sit

@@ -1519,6 +1519,76 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 /* The row's own expanded and hover states paint `--dsw-alias-interactive-bg-hover`,
    an ink wash. It still reads on a translucent fill, so it is left to the host. */
 
+/* ---------- Segmented tabs: the shared control, in one place.
+
+   The host renders two of them from `src/SegmentedTabs` and
+   `src/SegmentedControl`, and both are the same shape: a `role='tablist'`
+   container holding one `span[aria-hidden]` that slides under the active tab plus
+   one `role='tab'` button per option. The plugin manager's 已安装 / 插件市场 pair,
+   the tasks / channels / timed set in the sidebar, and the model page's provider
+   switch are all this control.
+
+   Their track and their sliding indicator are both painted with surface tokens —
+   `--dsw-alias-bg-module-platform`, `--dsw-alias-bg-layer-1/3`,
+   `--dsw-alias-interactive-bg-hover` — which are flat in float mode, so the whole
+   control read as a white pill sitting on a white plate. The track takes the
+   translucent token, and the indicator becomes the raised pane: a denser fill, a
+   specular line along its top edge and a hairline, so it reads as a piece of glass
+   sliding in a groove rather than as a paper tab.
+
+   The workbench's own tab strip is excluded: it carries
+   `data-dockkit-strip` and has its own recipe further down.
+
+   `:has(> span[aria-hidden='true'])` is the second guard and the load-bearing
+   one. Both host implementations render that span, and it is what makes the
+   control a segmented track with a sliding pane. Plenty of plugins put
+   `role='tablist'` on a plain row of buttons — the ticket assistant's page nav is
+   one — and they have no such child. Without the guard this rule drew a tray and a
+   hairline around those plain rows, which is exactly the stray border it looked
+   like. ---------- */
+[data-dsh-float] [role='tablist']:not([data-dockkit-strip]):has(> span[aria-hidden='true']) {
+  border-radius: 10px;
+  /* The two implementations disagree on their track fill — `SegmentedTabs`
+     paints `--dsw-alias-bg-module-platform`, `SegmentedControl` paints
+     `--dsw-alias-interactive-bg-hover`, which is a blue ink — so the same
+     control read as a pale tray in the plugin page and as a blue tray in the
+     sidebar. One neutral fill for both. */
+  background: color-mix(in srgb, rgb(19 45 83) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow: inset 0 0 0 1px rgba(19, 45, 83, 0.1);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.5));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [role='tablist']:not([data-dockkit-strip]):has(> span[aria-hidden='true']) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow: inset 0 0 0 1px rgba(148, 180, 220, 0.14);
+}
+
+/* The sliding indicator. It is the container's first `aria-hidden` span in both
+   components, and the only absolutely positioned child either of them renders. */
+[data-dsh-float] [role='tablist']:not([data-dockkit-strip]) > span[aria-hidden='true'] {
+  background: color-mix(in srgb, rgb(255 255 255) calc(72% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px rgba(19, 45, 83, 0.1),
+    0 1px 2px rgba(19, 45, 83, 0.08);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [role='tablist']:not([data-dockkit-strip]) > span[aria-hidden='true'] {
+  background: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 0 0 1px rgba(148, 180, 220, 0.16),
+    0 1px 2px rgba(2, 6, 14, 0.3);
+}
+
+/* The tabs themselves stay transparent — the indicator is the surface. Hover and
+   the selected colour are the host's own ink. Scoped to a real segmented track:
+   on a plain `role='tablist'` row of buttons a transparent background is not ours
+   to set. */
+[data-dsh-float] [role='tablist']:not([data-dockkit-strip]):has(> span[aria-hidden='true']) > [role='tab'] {
+  background: transparent;
+}
+
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 /* The bar reads the business-blue token directly: active-accent is a tint now
    (the question chip reuses it as a background), so it would be invisible here. */

@@ -119,16 +119,23 @@ describe('both schemes carry their own chip', () => {
 })
 
 describe('the seam survives module renames', () => {
+  /** Rules that positively target the strip, ignoring those that exclude it. */
+  const stripRules = (): Rule[] =>
+    rules.filter(rule => {
+      // `:not([data-dockkit-strip])` is an exclusion, not a target: the shared
+      // segmented-control rules use it to leave this strip alone.
+      const positive = rule.selector.replace(/:not\([^)]*\[data-dockkit-strip\][^)]*\)/g, '')
+      return positive.includes('dockkit-strip')
+    })
+
   it('never names a hashed class', () => {
-    for (const rule of rules) {
-      if (!rule.selector.includes('dockkit-strip')) continue
+    for (const rule of stripRules()) {
       expect(rule.selector).not.toMatch(/\[class[*^$]?=/)
     }
   })
 
   it('scopes the chip to the workbench card', () => {
-    for (const rule of rules) {
-      if (!rule.selector.includes('dockkit-strip')) continue
+    for (const rule of stripRules()) {
       expect(rule.selector).toContain('[data-dsh-details]')
     }
   })

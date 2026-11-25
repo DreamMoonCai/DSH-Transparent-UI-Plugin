@@ -852,6 +852,20 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px)) saturate(1.08) brightness(1.22);
 }
 
+/* The sidebar's press is the same geometric tilt as every other card.
+
+   It became possible by re-anchoring its two `position: fixed` titlebar guests
+   for the duration of a press — see `pinFixedGuests` in the controller. While the
+   settings overlay is open, that sheet renders INSIDE this column, so the tilt
+   stands still exactly then: a live transform would trap the sheet at the column
+   width. That guard lives in `tiltable`.
+
+   The press transition is the shared one, so this card glides on the same clock as
+   the composer and the workbench card. */
+[data-dsh-float][data-dsh-aqua-press] [class*='sidebarCol'] {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Collapsed rail (web build): floats too (mica mode). The rail keeps the
    app's own geometry: the frame's grid track slides 256→56 (300ms) while the
    app fades the frozen wide content out (150ms) — pinning a width here would

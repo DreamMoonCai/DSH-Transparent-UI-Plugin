@@ -64,11 +64,19 @@ const TILT_PERSPECTIVE = 800
 const SETTLE_MS = 360
 
 /**
- * The sidebar column (lightningcss keeps the class substring). It hosts the
- * desktop titlebar chrome and the settings overlay, so it takes the glow but
- * never the transform — see `tiltable`.
+ * The sidebar column (lightningcss keeps the class substring). It tilts like the
+ * other cards, but it owns two `position: fixed` guests — the desktop titlebar
+ * chrome — so those are re-anchored into the card for the duration of a press.
+ * See `liftFixedGuests` / `restoreFixedGuests`.
  */
 const SIDEBAR_COLUMN = '[class*="sidebarCol"]'
+
+/**
+ * A `position: fixed` guest inside a pane. A live transform is a containing block
+ * for these, so they are converted to `position: absolute` with their on-screen
+ * box preserved, which keeps them exactly where they were while the pane rotates.
+ */
+const FIXED_GUEST = '[data-sidebar-toggle], [class*="railIn"] [class*="newSession"]'
 
 /**
  * The right workbench card's seam. It can host the dockkit floating pane,
@@ -128,14 +136,12 @@ function hoverGated(): boolean {
 /** Whether the tilt may run on this pane right now. */
 function tiltable(spot: HTMLElement): boolean {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
-  // The sidebar NEVER tilts. A transform is a containing block for every
-  // `position: fixed` descendant, and this column owns two such guests: the
-  // desktop titlebar chrome (collapse toggle at 12px, new session at 48px of
-  // the reserved titlebar band) and the settings overlay rendered inside the
-  // column. Pressing inside the sidebar would re-anchor both into the card —
-  // the panel traps at the column width and the titlebar buttons jump out of
-  // the window chrome. The glow is the only effect the sidebar takes part in.
-  if (spot.matches(SIDEBAR_COLUMN)) return false
+  // The sidebar tilts like the other cards. Its two `position: fixed` titlebar
+  // guests are re-anchored into the card for the duration of a press instead of
+  // banning the tilt — see `liftFixedGuests`. One shape still stands still: while
+  // the settings overlay is open it renders INSIDE this column, and a live
+  // transform would trap that sheet at the column width.
+  if (spot.matches(SIDEBAR_COLUMN) && spot.querySelector(DIALOG) !== null) return false
   // The workbench card tilts like the other glass, with one exception: a
   // floated dockkit pane is `position: fixed` and lives inside it, so a live
   // transform would re-anchor that pane into the card. It only mounts while
@@ -194,6 +200,43 @@ export function startSpotlight(): () => void {
   /** Pending ease-back removal timers per pane (leave → neutral → cleanup). */
   const settle = new Map<HTMLElement, number>()
 
+  /**
+   * Guests lifted out of their pane, with where they came from.
+   *
+   * A `position: fixed` element resolves against the viewport — until an ancestor
+   * carries a transform, at which point that ancestor becomes the containing block
+   * and the element jumps. The sidebar's titlebar chrome is exactly that, and it
+   * sits ABOVE the card in the reserved titlebar band, so re-anchoring it inside
+   * the card both moves it and lets the card's `overflow: hidden` clip it away.
+   *
+   * The fix is to take the guest out of the pane entirely for the duration of the
+   * press: it moves to `<body>`, keeps its `position: fixed`, and therefore keeps
+   * resolving against the viewport exactly as it did before the transform existed.
+   * It is put back where it came from once the press settles.
+   */
+  const lifted = new Map<HTMLElement, { parent: Node, next: Node | null }>()
+
+  const liftFixedGuests = (spot: HTMLElement): void => {
+    if (lifted.size > 0) return
+    for (const guest of spot.querySelectorAll<HTMLElement>(FIXED_GUEST)) {
+      if (window.getComputedStyle(guest).position !== 'fixed') continue
+      const parent = guest.parentNode
+      if (parent === null) continue
+      lifted.set(guest, { parent, next: guest.nextSibling })
+      document.body.appendChild(guest)
+    }
+  }
+
+  const restoreFixedGuests = (): void => {
+    for (const [guest, home] of lifted) {
+      // React may have torn the row down while the pointer was inside; a node with
+      // no home any more is simply dropped instead of being re-inserted.
+      if (home.parent.isConnected) home.parent.insertBefore(guest, home.next)
+      else guest.remove()
+    }
+    lifted.clear()
+  }
+
   /** Ease a pressed pane back to neutral, then drop the inline transform. */
   const easeBack = (spot: HTMLElement): void => {
     if (!tilted.has(spot)) return
@@ -207,6 +250,8 @@ export function startSpotlight(): () => void {
       settle.delete(spot)
       spot.style.removeProperty('transform')
       spot.style.removeProperty('transform-origin')
+      // The guests only need re-anchoring while a transform is live.
+      restoreFixedGuests()
     }, SETTLE_MS)
     settle.set(spot, id)
   }
@@ -278,8 +323,10 @@ export function startSpotlight(): () => void {
         // The trajectory pane is far larger than the other glass — half the
         // magnitude there so the press stays gentle.
         const tiltMax = spot.hasAttribute('data-dsh-trajectory') ? TILT_MAX * 0.5 : TILT_MAX
+        // Any `position: fixed` guest inside this pane is re-anchored BEFORE the
+        // first transform lands, so it never has a frame in which to jump.
+        liftFixedGuests(spot)
         // Rotate about the visible glass center (spot-local, untransformed).
-        // Same recipe for every tiltable pane (the sidebar is not one).
         spot.style.transformOrigin =
           `${local.left + local.width / 2}px ${local.top + local.height / 2}px`
         spot.style.transform =

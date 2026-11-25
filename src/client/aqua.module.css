@@ -1485,6 +1485,40 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   border-radius: 16px 16px 0 0;
 }
 
+/* ---------- Secondary glass: a surface inside a card.
+
+   The panels that host secondary rows — the environment card's change-request
+   list, the plugin manager's entry cards, the shortcuts reference, the
+   trajectory tables — all paint their nested surfaces with the shared
+   `--dsw-alias-bg-module-platform` token, and the forge rows additionally
+   declare `--forge-card-surface` from it. That token was a flat `#FFFFFF`, so
+   every nested row landed as a white slab on the card it sits in; it is
+   translucent now (see `theme-layer.ts`), which is what makes a row read as a
+   pane of the parent rather than as a sheet of paper on top of it.
+
+   What a fill alone cannot do is catch the light. These two rules give the
+   nested row the same top highline and hairline the cards use, so the stack
+   reads as glass on glass: the card, then the row one step denser.
+
+   The seam is the host's own attributes — `[data-forge-change]` on the row and
+   `[data-forge-panel]` on the list — never a hashed module class. ---------- */
+[data-dsh-float] [data-forge-panel] [data-forge-change] {
+  border-radius: 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: background-color 0.2s ease-out;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-forge-panel] [data-forge-change] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* The row's own expanded and hover states paint `--dsw-alias-interactive-bg-hover`,
+   an ink wash. It still reads on a translucent fill, so it is left to the host. */
+
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 /* The bar reads the business-blue token directly: active-accent is a tint now
    (the question chip reuses it as a background), so it would be invisible here. */

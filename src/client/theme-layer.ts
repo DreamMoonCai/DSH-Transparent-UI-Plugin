@@ -71,7 +71,13 @@ export const AQUA_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-alias-bg-layer-2': { light: '#ECF2FA', dark: '#162130' },
   '--dsw-alias-bg-layer-3': { light: '#E2EBF7', dark: '#1C2A3D' },
   '--dsw-alias-bg-overlay': { light: '#DCE7F4', dark: '#22334A' },
-  '--dsw-alias-bg-module-platform': { light: '#FFFFFF', dark: '#111A27' },
+  // The module-platform surface is the host's second-level glass: every
+  // secondary panel, track and tile inside a card is painted with it — the forge
+  // change-request rows, the plugin manager's cards, the shortcuts reference, the
+  // trajectory tables (85 rules across 46 files). It was a flat `#FFFFFF` here, so
+  // every one of those landed as a white slab on the glass. Translucent instead,
+  // one step denser than a card so a nested surface still reads as raised.
+  '--dsw-alias-bg-module-platform': { light: 'rgba(255, 255, 255, 0.34)', dark: 'rgba(226, 236, 250, 0.1)' },
   '--dsw-alias-bg-multi-select': { light: '#FFFFFF', dark: '#162130' },
   '--dsw-alias-bg-skeleton': { light: 'rgba(19, 45, 83, 0.08)', dark: 'rgba(148, 180, 220, 0.12)' },
   '--dsw-alias-bg-mask-1': { light: 'rgba(19, 37, 62, 0.3)', dark: 'rgba(4, 8, 14, 0.55)' },
@@ -142,6 +148,11 @@ export const AQUA_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-alias-markdown-code-segment-selected': { light: '#FFFFFF', dark: '#1C2A3D' },
   '--dsw-alias-markdown-code-segment-unselected': { light: '#F0F5FB', dark: '#0F1723' },
 
+  // The forge change-request rows declare their own surface variable on top of
+  // the module-platform fill; both are cleared or softened in the stylesheet so a
+  // row reads as a pane of the card it sits in. See the secondary-glass section
+  // in aqua.module.css.
+
   // Scrollbars. Neutral ink, never the brand blue: a tinted bar reads as a
   // control floating over the glass, while a low-alpha ink reads as the surface
   // itself being thicker there. The geometry (a wider lane, a padded floating
@@ -163,7 +174,11 @@ export const AQUA_TOKEN_OVERRIDES: ThemeTokenOverrides = {
   '--dsw-specific-sidebar-nav-item-active-accent': { light: '#DCE9FB', dark: '#1D2C44' },
   '--dsw-specific-input-major': { light: '#FFFFFF', dark: '#101927' },
   '--dsw-specific-login-input': { light: '#F0F5FB', dark: '#0D141F' },
-  '--dsw-specific-menu': { light: '#EAF1F9', dark: '#162130' },
+  // The menu surface: popovers, the queue dock, the todo panel, the goal bar, the
+  // Cordis panel and the forge step cards all paint it, usually behind their own
+  // `--dsw-menu-backdrop-filter`. A flat value made each of those an opaque plate
+  // on the glass; translucent lets the blur they already declare do its work.
+  '--dsw-specific-menu': { light: 'rgba(234, 241, 249, 0.55)', dark: 'rgba(22, 33, 48, 0.6)' },
   '--dsw-specific-selector': { light: '#EAF1F9', dark: '#1C2A3D' },
   '--dsw-specific-bubble': { light: '#F0F5FC', dark: '#121C2A' },
   '--dsw-specific-bubble-highlight': { light: '#DCE9FB', dark: '#1A283A' },

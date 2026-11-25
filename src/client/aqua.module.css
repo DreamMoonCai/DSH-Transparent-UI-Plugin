@@ -1301,6 +1301,61 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     0 1px 2px rgba(2, 6, 14, 0.34);
 }
 
+/* ---------- Glass on glass: the panels inside a sheet.
+
+   Re-pointing the surface tokens made these translucent, but a translucent wash
+   is not glass. There is no blur behind it and no edge catching light, so the
+   account card and the balance card still read as flat grey rectangles lying on
+   the sheet. They now take a layer of their own, one step above the plate.
+
+   The seam is the class suffix. A CSS-module name keeps its local name after the
+   hash, so `_6qcDqa_balanceCard` ends in `Card` and `_6qcDqa_card` ends in
+   `_card`. The parts inside a card — `cardTop`, `cardTitle`, `cardCheckbox` —
+   end differently, which is what keeps a tint from landing behind a label. */
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])
+  :is([class$='Card'], [class$='_card']) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(19, 45, 83, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.64),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 1px 3px rgba(19, 45, 83, 0.07);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.6));
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop'])
+  :is([class$='Card'], [class$='_card']) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 1px 3px rgba(2, 6, 14, 0.3);
+}
+
+/* A card that answers the pointer. Only the ones the host makes clickable carry
+   a button or a link inside, so this never puts a lift on a static read-out. */
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])
+  :is([class$='Card'], [class$='_card']):is(:hover, :focus-within) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(64% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 2px 8px rgba(19, 45, 83, 0.1);
+  transition:
+    background-color 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop'])
+  :is([class$='Card'], [class$='_card']):is(:hover, :focus-within) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(15% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 2px 8px rgba(2, 6, 14, 0.36);
+}
+
 /* Hover is left to the host: `.AnXs9G_navCell:hover` paints
    `--dsw-alias-interactive-bg-hover`, an 8% ink wash that reads on both schemes.
    Replacing it with a white wash killed the feedback outright — white over a

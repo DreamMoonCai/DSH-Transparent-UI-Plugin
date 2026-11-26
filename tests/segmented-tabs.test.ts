@@ -19,7 +19,10 @@ import { describe, expect, it } from 'vitest'
 
 const aquaCss = readFileSync(resolve(process.cwd(), 'src/client/aqua.module.css'), 'utf8')
 
-const flat = aquaCss.replace(/\s+/g, ' ')
+// Comments quote the selectors they explain, so a selector scan over the raw
+// text matches prose. Strip them first, or a rule that was never written reads
+// as a violation.
+const flat = aquaCss.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ')
 
 function blockOf(needle: string): string | null {
   const at = flat.indexOf(needle)
@@ -86,6 +89,9 @@ describe('the workbench tab strip is left alone', () => {
   it('does not touch a tab inside a dockkit strip', () => {
     for (const match of flat.matchAll(/[^{}]*\[role='tab'\][^{}]*\{/g)) {
       if (match[0].includes('data-dockkit-strip')) continue
+      // The conversation's 对话 / 轨迹 row is its own control (see
+      // tests/prose-surfaces.test.ts), keyed off the component attribute.
+      if (match[0].includes('data-conversation-tabs')) continue
       // Any other tab rule must be scoped through the tablist guard.
       expect(match[0]).toContain("[role='tablist']")
     }

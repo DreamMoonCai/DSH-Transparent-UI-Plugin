@@ -57,6 +57,26 @@ const TILT_MAX = 0.0175
 /** Tilt perspective distance, px (official value). */
 const TILT_PERSPECTIVE = 800
 
+/** The press's own scale, applied by the official card. */
+const SCALE_GROWTH = 0.01
+
+/**
+ * How far an edge may travel outward during a press, px.
+ *
+ * The press grows a pane from its centre: `rotate ±1°` pushes the far half out by
+ * roughly `halfWidth * sin(angle)`, and `scale(1.01)` adds another
+ * `halfWidth * 0.01`. Both terms scale with the pane's own size, so a card moves
+ * a few pixels while a pane as wide as the window throws its edge tens of pixels
+ * outward — past its own margin, into the neighbouring column, where the frame
+ * clips it as a straight edge.
+ *
+ * The gap between a pane and the frame is a fixed 16px, so the travel is capped
+ * just inside it. A card never reaches the cap and keeps the full angle; a wide
+ * pane gets the same gesture at the magnitude its own margin can hold, and no
+ * edge ever crosses a clip boundary.
+ */
+const TILT_LIFT_BUDGET = 12
+
 /** Ease-back settle time (ms) — must outlast the CSS transform transition.
  *  The stylesheet runs the press at 300ms, so the inline transform survives a
  *  further 60ms before it is dropped; removing it earlier would cut the
@@ -360,7 +380,15 @@ export function startSpotlight(): () => void {
         const dy = Math.min(0.5, Math.max(-0.5, (clientY - visual.top) / visual.height - 0.5))
         // The trajectory pane is far larger than the other glass — half the
         // magnitude there so the press stays gentle.
-        const tiltMax = spot.hasAttribute('data-dsh-trajectory') ? TILT_MAX * 0.5 : TILT_MAX
+        const base = spot.hasAttribute('data-dsh-trajectory') ? TILT_MAX * 0.5 : TILT_MAX
+        // Both terms that push an edge outward are proportional to the pane's own
+        // half-width, so the travel is divided back out: a pane keeps the full
+        // angle until that would move it more than the budget, and larger panes
+        // take a proportional share of it. See TILT_LIFT_BUDGET.
+        const halfWidth = Math.max(1, visual.width / 2)
+        const need = halfWidth * (Math.sin(base) + SCALE_GROWTH)
+        const fit = Math.min(1, TILT_LIFT_BUDGET / Math.max(1, need))
+        const tiltMax = base * fit
         // Any `position: fixed` guest inside this pane is re-anchored BEFORE the
         // first transform lands, so it never has a frame in which to jump.
         liftFixedGuests(spot)
@@ -368,7 +396,7 @@ export function startSpotlight(): () => void {
         spot.style.transformOrigin =
           `${local.left + local.width / 2}px ${local.top + local.height / 2}px`
         spot.style.transform =
-          `perspective(${TILT_PERSPECTIVE}px) rotateX(${tiltMax * -2 * dy}rad) rotateY(${tiltMax * 2 * dx}rad) scale(1.01)`
+          `perspective(${TILT_PERSPECTIVE}px) rotateX(${tiltMax * -2 * dy}rad) rotateY(${tiltMax * 2 * dx}rad) scale(${1 + SCALE_GROWTH * fit})`
         tilted.add(spot)
       } else if (tilted.has(spot)) {
         // Tilt toggled off mid-hover (or a guarded pane): release only

@@ -94,4 +94,28 @@ describe('the press may paint outside its column', () => {
       expect(rule.selector, rule.selector).toContain('[data-dsh-float]')
     }
   })
+
+  it('lifts every box in the chain, not just the columns', () => {
+    // The columns were not the last clippers: `#root` fills the window and clips
+    // at its own box, so a transformed pane that cleared the column still met it.
+    // `html`/`body` are deliberately left alone — a clip margin on the root
+    // viewport is ignored (the browser owns that boundary), so the window edge
+    // stays fixed and the controller has to keep the press out of it instead.
+    const selectors = MARGIN.map(rule => rule.selector).join(' ')
+    expect(selectors).toMatch(/#root\b/)
+    expect(selectors).not.toMatch(/^[^,]*\bhtml\b/)
+    expect(selectors).not.toMatch(/\]\s*body\b/)
+  })
+
+  it('keeps every id selector global', () => {
+    // `cssModules` in the build rewrites bare ID selectors exactly like classes:
+    // `#root` compiled to `#_4y1oNG_root`, an id that no document ever carries, so
+    // the rule silently matched nothing. Only `:global()` escapes the rewrite.
+    for (const rule of all) {
+      for (const match of rule.selector.matchAll(/(^|[\s,>+~(])#[A-Za-z_][\w-]*/g)) {
+        const before = rule.selector.slice(Math.max(0, match.index! - 10), match.index! + 1)
+        expect(before, `${rule.selector} :: ${match[0].trim()}`).toMatch(/:global\($/)
+      }
+    }
+  })
 })

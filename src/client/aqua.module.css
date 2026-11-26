@@ -100,6 +100,34 @@
   --dsh-surface: var(--dsh-aqua-glass-card-dark);
 }
 
+/* ---------- The Cursor child-agent panel.
+
+   Answering `--dsh-surface` above stops the panel being a black rectangle, but it
+   still looks like a drop-in bolted on: its own sheet hard-codes a 12px radius, a
+   grey hairline and a heavy black shadow, and it sets all of those as inline
+   styles on the element, so only `!important` reaches them.
+
+   The hook is the inline `background: var(--dsh-surface, …)` the plugin writes —
+   it is the one string in that style object that only this panel carries. The
+   polish is the same grammar as every other card: the sheet's radius, a top
+   highline inside the frame, a hairline instead of the grey border, and a shadow
+   in the page's ink rather than pure black. ---------- */
+[data-dsh-float] div[style*='--dsh-surface'] {
+  border-radius: 20px !important;
+  border: 1px solid rgba(19, 45, 83, 0.26) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 18px 48px rgba(19, 45, 83, 0.22) !important;
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px)) !important;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] div[style*='--dsh-surface'] {
+  border-color: rgba(148, 180, 220, 0.32) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 18px 48px rgba(2, 6, 14, 0.5) !important;
+}
+
 /* ---------- Let the press paint outside the column it sits in.
 
    The press is `perspective(800px) rotateX/Y(±1°) scale(1.01)`. The rotation
@@ -117,11 +145,21 @@
    the paint boundary outward without turning the box into a scroll container, so
    no scrollbar appears or disappears and nothing reflows. `clip` is also the
    stricter of the two (a `hidden` box can still be scrolled programmatically),
-   so the columns lose nothing by the swap. ---------- */
+   so nothing is lost by the swap.
+
+   The whole chain has to agree, not just the two columns. `#root` fills the
+   window and clips at its own box, and `html, body` carry `overflow: hidden`
+   from the app's own base sheet. A clip margin does nothing on the root viewport
+   — the browser owns that boundary and takes no margin — so the window stays the
+   one edge that cannot be widened. That is why the press is also clamped to the
+   room a pane actually has (see `TILT_SLACK` in spotlight.ts): the sheet widens
+   every box it can, and the controller keeps the gesture out of the one it
+   cannot. ---------- */
+[data-dsh-aqua][data-dsh-float] :global(#root),
 [data-dsh-aqua][data-dsh-float] [data-dsh-frame],
 [data-dsh-aqua][data-dsh-float] [data-dsh-frame] > [class*='centerCol'] {
   overflow: clip;
-  overflow-clip-margin: 28px;
+  overflow-clip-margin: 32px;
 }
 
 /* ---------- Right workbench column: the floating glass card that mirrors the
@@ -951,6 +989,35 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   box-shadow: 0 6px 20px rgba(2, 6, 14, 0.28);
 }
 
+/* ---------- The turn navigator's preview card.
+
+   The history rail beside the transcript is `TurnNavigator`: a column of small
+   ticks, one per turn. Hovering a tick opens this card. It carries
+   `role='tooltip'`, which is why the tooltip rule above used to catch it — but
+   it is not a tooltip in the sense that rule assumes. Its label is
+   `--dsw-alias-label-primary` (normal ink, dark on light), and it fills itself
+   with `--dsw-alias-bg-layer-1`, which this theme resolves to a flat `#FFFFFF`.
+   So it landed as a solid white plate over the transcript.
+
+   `--turn-preview-center` is written inline by the component to place the card
+   next to its tick, so it is a stable hook: the class is a CSS-module hash that
+   moves every release, and `role='tooltip'` alone would also catch the chrome
+   chips the rule above is there to protect. */
+[data-dsh-float] [role='tooltip'][style*='--turn-preview-center'] {
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 8px 26px rgba(19, 45, 83, 0.18);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.4));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [role='tooltip'][style*='--turn-preview-center'] {
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 8px 26px rgba(2, 6, 14, 0.36);
+}
+
 /* Card family (hover cards, panels, plugin cards, tool cards, the composer). */
 [data-dsh-float] [class*='card'] {
   border-radius: 14px;
@@ -1647,6 +1714,17 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   display: block;
   position: absolute;
   inset: 0;
+  /* `inset: 0` alone does not own the box. Main panels lay their children out
+     with `.page > * { flex: none; width: 100%; max-width: 960px }`, and this div
+     IS such a child — so both `width` and `max-width` reached it. A pinned
+     `width` beats the `right: 0` that `inset` wrote, so the overlay stopped at
+     960px while the pane ran the width of the window: the radial fill was cut
+     on a straight line down the middle, and past that line the cursor's centre
+     fell outside the element entirely, so the right half of a wide pane never
+     lit at all. Taking the box back is what makes the glow cover the pane. */
+  width: auto;
+  max-width: none;
+  min-width: 0;
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
@@ -2014,6 +2092,44 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   border-color: rgba(148, 180, 220, 0.14);
   background: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
 }
+
+/* ---------- The inline code chip.
+
+   Every `like this` in the transcript is `:not(pre) > code` inside the markdown
+   body, and the renderer gives it a flat plate plus a hairline:
+   `background-color: var(--dsw-alias-markdown-inline-code)` — `neutral-50`, an
+   opaque warm grey — and `border: .5px solid var(--dsw-alias-border-l1)`, with
+   `display: inline-flex` and 5px of side padding. On the glass that reads as a
+   small grey ticket sitting on the page: it is the one mark in the prose that
+   never picks up the pane's material.
+
+   The chip keeps its shape and its 5px rhythm (they are what makes it read as
+   code rather than as an emphasised word) and takes the same frost family as
+   everything else: a translucent fill one step brighter than the text it sits in,
+   a hairline in the page's ink, and a light blur so a chip over a picture still
+   separates. The split is the host's own — `:not(pre) > code` is the inline chip,
+   `pre > code` is a code block, which keeps its own rules above — so the markdown
+   wrapper needs no hook of its own; it is a CSS-module class that moves every
+   release, and this file must not guess at it.
+
+   The prefix carries both root attributes on purpose. The host's own selector is
+   `.markdown :not(pre) > code` — two class-level parts — so a bare
+   `[data-dsh-float] :not(pre) > code` would lose the tie-break on specificity and
+   the grey plate would stay. `html[data-dsh-float][data-dsh-aqua]` is also two
+   attributes and adds the element count, which wins. ---------- */
+html[data-dsh-float][data-dsh-aqua] :not(pre) > code {
+  background-color: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(19, 45, 83, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
+}
+
+html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
+  background-color: color-mix(in srgb, rgb(226 236 250) calc(12% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
 /* ---------- The generic hover card.
 
    The same primitive in its compact and media variants — the one that shows a
@@ -2361,6 +2477,57 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 [data-dsh-float] [role='tablist']:not([data-dockkit-strip]):has(> span[aria-hidden='true']) > [role='tab'] {
   background: transparent;
 }
+
+/* ---------- The conversation view tabs: 对话 / 轨迹.
+
+   This is the other kind of tab row — the conversation header's own. The host
+   renders `[role='tablist'][data-conversation-tabs]` holding one plain
+   `button[role='tab']` per view, and marks the open one with a 2px underline
+   drawn on `::after`. No tray, no indicator: on the glass column that left the
+   two words floating with a hairline under one of them, which reads as a link
+   rather than as the switch it is.
+
+   They take the same secondary-glass pane as the guide capsules and the
+   segmented track, so the two tab rows in the app finally look like the same
+   control. The container is the hook, not the class: the class list is a
+   CSS-module hash (`an3WzG_viewTabs`) that moves every release, while
+   `data-conversation-tabs` is written by the component. The underline is kept on
+   the open tab as the accent mark on top of the pane — it is the host's own way
+   of saying which view is open, and it stays legible over a translucent fill. */
+[data-dsh-float] [data-conversation-tabs] > [role='tab'] {
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+[data-dsh-float] [data-conversation-tabs] > [role='tab']:hover {
+  background: color-mix(in srgb, rgb(255 255 255) calc(42% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow: inset 0 0 0 1px rgba(19, 45, 83, 0.08);
+}
+
+[data-dsh-float] [data-conversation-tabs] > [role='tab'][aria-selected='true'] {
+  background: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(19, 45, 83, 0.1),
+    0 1px 3px rgba(19, 45, 83, 0.08);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-conversation-tabs] > [role='tab']:hover {
+  background: color-mix(in srgb, rgb(226 236 250) calc(10% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow: inset 0 0 0 1px rgba(148, 180, 220, 0.12);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-conversation-tabs] > [role='tab'][aria-selected='true'] {
+  background: color-mix(in srgb, rgb(226 236 250) calc(14% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(148, 180, 220, 0.16),
+    0 1px 3px rgba(2, 6, 14, 0.28);
+}
+
 
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 /* The bar reads the business-blue token directly: active-accent is a tint now

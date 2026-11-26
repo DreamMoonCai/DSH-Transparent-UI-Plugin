@@ -144,10 +144,13 @@ describe('the panel takes the same press as the other panes', () => {
     expect(guard).toMatch(/position:\s*absolute/)
   })
 
-  it('stands still while a row menu is open', () => {
-    // That menu is `position: fixed` and lives inside the card, so a live
-    // transform would re-anchor it — the same reason the sidebar never tilts.
-    expect(controller).toContain("const PANEL_MENU = '[role=\"menu\"]'")
+  it('stands still while a row menu or a hand-rolled picker is open', () => {
+    // Both are `position: fixed` and live inside the card, so a live transform
+    // would re-anchor them to the card — the same reason the sidebar never tilts.
+    // `role='listbox'` is in the guard because third-party pages render their
+    // pickers by hand (the proxy plugin writes a fixed, rect-placed listbox into
+    // its own tree), and those were being re-anchored and clipped.
+    expect(controller).toContain('const PANEL_MENU = \'[role="menu"], [role="listbox"]\'')
     expect(controller).toMatch(/if \(spot\.matches\(SESSION_PANEL\) && spot\.querySelector\(PANEL_MENU\) !== null\) return false/)
   })
 })

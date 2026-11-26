@@ -62,42 +62,50 @@
      them, so they are denser than the card fill they frost over. */
   --dsh-aqua-glass-sticky-light: color-mix(in srgb, rgb(255 255 255) calc(88% * var(--dsh-aqua-frost, 1)), transparent);
   --dsh-aqua-glass-sticky-dark: color-mix(in srgb, rgb(34 38 47) calc(88% * var(--dsh-aqua-frost, 1)), transparent);
-  /* ---------- The menu surface family.
+}
 
-     The host defines `--dsw-menu-surface-fill` (`rgba(252,253,254,0.7)`;
-     dark `rgba(48,49,54,0.64)`, under plain `body`) and then writes
-     `backdrop-filter: var(--dsw-menu-backdrop-filter)` on every floating menu
-     and on the session-stats sheet. That second token is defined NOWHERE in the
-     shipped theme — not in design-platform.css, not in either frontend bundle —
-     so the declaration is invalid at computed-value time and falls back to
-     `none`. Every menu therefore painted as a 70% white plate with no blur at
-     all: the translucent fill of a glass surface with the frost of a sheet of
-     paper. The elevation tokens are missing the same way, which is why those
-     plates also had no shadow.
+/* ---------- The menu surface family. Declared on `body`, NOT on `<html>`.
 
-     Supplying them once, at the root, answers the whole family — the `Menu`
-     primitive's `.material` layer, the session-stats sheet
-     (`background: var(--dsw-specific-menu)` + the same filter), the proxy
-     dropdown and any future popup that asks the same question. */
+   The theme declares this whole family inside a `body{…}` block —
+   `--dsw-menu-surface-fill: #fcfdfeb3` from `design-platform.css`,
+   `--dsw-menu-backdrop-filter: blur(40px) saturate(150%)`,
+   `--dsw-mask-blur: none`, `--dsw-specific-menu: var(--dsw-menu-surface-fill)`,
+   and `--dsw-elevation-*` from `src/styles/gradient-shadow-text.css`. An
+   inherited value never beats a declaration on the element itself, so writing
+   these on `[data-dsh-aqua]` (which is `<html>`) left every popup reading the
+   host's own numbers: a 70% white plate over a 40px blur that is mostly hidden
+   by its own fill. `[data-dsh-aqua] body` is an attribute plus a type selector,
+   which out-ranks the host's bare `body`.
+
+   The fill is re-pointed one step denser than a card (62%): a menu hangs over
+   content rather than over the page, so its blur needs something to frost. The
+   elevation tokens are supplied for the same reason — the sheet and the menus
+   read `--dsw-elevation-prominent`, and without it they cast no shadow at all,
+   which is what made them read as flat cutouts sitting on the glass. */
+[data-dsh-aqua] body {
   --dsw-menu-backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.5)) saturate(140%);
   --dsw-elevation-prominent: 0 16px 44px rgba(19, 45, 83, 0.2);
   --dsw-elevation-panel: 0 8px 28px rgba(19, 45, 83, 0.16);
-  /* The missing blur and the missing elevation are the whole of the popup bug:
-     with the filter restored the host's own 70% fill finally reads as frosted
-     glass, which is exactly the material the surrounding panes use. The fill
-     itself is deliberately NOT re-pointed — the card material is 42% white, and
-     swapping it in here made these plates noticeably MORE transparent than the
-     sheet they hang over, which is the opposite complaint. These two tokens are
-     the ones the theme simply never defines, so the root is free to answer them;
-     `--dsw-menu-surface-fill` is left to the host rule on `body`. */
-  --dsw-menu-backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.5)) saturate(140%);
-  --dsw-elevation-prominent: 0 16px 44px rgba(19, 45, 83, 0.2);
-  --dsw-elevation-panel: 0 8px 28px rgba(19, 45, 83, 0.16);
+  --dsw-menu-surface-fill: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-specific-menu: var(--dsw-menu-surface-fill);
+  --dsw-alias-menu-group-header-fill: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+  /* A second alias with the same trap. The host declares
+     `--dsw-alias-settings-card-fill: var(--dsw-alias-bg-layer-2)` on `body`, so
+     the reference is substituted right there — against the OPAQUE `#fff` the body
+     still holds — and every card that reads the alias inherits that flat white
+     no matter what its own scope does with layer-2. Re-declaring the alias at the
+     same level, with a literal fill, is what finally makes those cards
+     translucent: the plugin market's cards and tiles ask for exactly this token. */
+  --dsw-alias-settings-card-fill: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 [data-dsh-aqua] body[data-ds-dark-theme] {
   --dsw-elevation-prominent: 0 16px 44px rgba(2, 6, 14, 0.55);
   --dsw-elevation-panel: 0 8px 28px rgba(2, 6, 14, 0.45);
+  --dsw-menu-surface-fill: color-mix(in srgb, rgb(28 32 42) calc(68% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-specific-menu: var(--dsw-menu-surface-fill);
+  --dsw-alias-menu-group-header-fill: color-mix(in srgb, rgb(28 32 42) calc(56% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-settings-card-fill: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 [data-dsh-aqua] [data-dsh-frame] {
@@ -1610,6 +1618,116 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   border-color: rgba(148, 180, 220, 0.32);
 }
 
+/* The cost plugin flattens alpha on purpose, so the tokens above cannot reach
+   its plates.
+
+   Its sheet paints every section with two declarations in a row:
+   `background: var(--cm-opaque-base, #fff)` followed by
+   `background: rgb(from var(--dsw-alias-bg-layer-2, …) r g b / 1)`. The
+   relative-colour form pins the alpha to `1`, so a 36% translucent layer-2 is
+   turned back into a solid pixel value before it ever reaches the screen — the
+   card stays a white slab even though the token under it is now glass. The only
+   way past a declaration is a later one that wins on specificity, so these
+   selectors name the plugin's own class stems, where `:global` keeps them from
+   being hashed. Two mounts are covered, because the plugin renders its summary
+   in both: the settings sheet and a right-column pane. */
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) :is(
+  :global(.cm-section),
+  :global(.cm-card),
+  :global(.cm-budget),
+  :global(.cm-simple-summary),
+  :global(.cm-qguide),
+  :global(.cm-price-card),
+  :global(.cm-pricing-nav),
+  :global(.cm-quota-detail),
+  :global(.cm-bbox),
+  :global(.cm-peak-alert),
+  :global(.cm-corner-chip),
+  :global(.cm-gw-switcher)
+),
+[data-dsh-float] [data-dsh-details] :is(
+  :global(.cm-section),
+  :global(.cm-card),
+  :global(.cm-budget),
+  :global(.cm-simple-summary),
+  :global(.cm-qguide),
+  :global(.cm-price-card),
+  :global(.cm-pricing-nav),
+  :global(.cm-quota-detail),
+  :global(.cm-bbox),
+  :global(.cm-peak-alert),
+  :global(.cm-corner-chip),
+  :global(.cm-gw-switcher)
+) {
+  /* `!important` is required, not stylistic: each of these rules declares its
+     fill twice, the second time as `rgb(from … r g b / 1)`, and the alpha
+     function is resolved in the declaration itself. Nothing but importance
+     out-ranks a value that was already computed. */
+  background: var(--dsh-aqua-glass-card-light) !important;
+  border-color: rgba(19, 45, 83, 0.12);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) :is(
+  :global(.cm-section),
+  :global(.cm-card),
+  :global(.cm-budget),
+  :global(.cm-simple-summary),
+  :global(.cm-qguide),
+  :global(.cm-price-card),
+  :global(.cm-pricing-nav),
+  :global(.cm-quota-detail),
+  :global(.cm-bbox),
+  :global(.cm-peak-alert),
+  :global(.cm-corner-chip),
+  :global(.cm-gw-switcher)
+),
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] :is(
+  :global(.cm-section),
+  :global(.cm-card),
+  :global(.cm-budget),
+  :global(.cm-simple-summary),
+  :global(.cm-qguide),
+  :global(.cm-price-card),
+  :global(.cm-pricing-nav),
+  :global(.cm-quota-detail),
+  :global(.cm-bbox),
+  :global(.cm-peak-alert),
+  :global(.cm-corner-chip),
+  :global(.cm-gw-switcher)
+) {
+  background: var(--dsh-aqua-glass-card-dark) !important;
+  border-color: rgba(148, 180, 220, 0.18);
+}
+
+/* Popovers that hang OFF a control inside a sheet — the archive manager's date
+   picker is one (`.dsham_datePopover`, `position: absolute`, filled from
+   layer-1). Re-pointing layer-1 made it translucent but not glass: at 52% with
+   no blur of its own, the labels behind it stayed readable through the plate and
+   the preset list read as if it were folded into them. A popover covers rows, so
+   it takes the sticky recipe instead — dense enough to sit on content, and a
+   doubled blur so what is underneath turns to tone rather than text.
+
+   The hook is the class stem, which a plain (non-module) injected stylesheet
+   keeps verbatim, so `:global` is not needed for a substring match. */
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) [class*='datePopover'],
+[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) [class*='Popover'][class*='-'] {
+  background: var(--dsh-aqua-glass-sticky-light);
+  border-color: rgba(19, 45, 83, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 8px 24px rgba(19, 45, 83, 0.16);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 2));
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) [class*='datePopover'],
+[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) [class*='Popover'][class*='-'] {
+  background: var(--dsh-aqua-glass-sticky-dark);
+  border-color: rgba(148, 180, 220, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 24px rgba(2, 6, 14, 0.45);
+}
+
 
 /* ---------- Session panel (the "环境" card floating over the chat).
    0.2.3 adds it as an absolutely positioned `aside[data-session-panel]` that
@@ -2013,9 +2131,28 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    end differently, which is what keeps a tint from landing behind a label.
 
    The plugin manager's rows are not touched here: that page is a main-area
-   panel, not a sheet, so this rule never reaches it. */
+   panel, not a sheet, so this rule never reaches it.
+
+   One exclusion, and it is load-bearing: a card that currently HOLDS an open
+   dropdown gets no blur.
+
+   `backdrop-filter` makes an element the containing block for its
+   `position: fixed` descendants. Several plugin pages drop a fixed picker
+   inside one of these cards — the proxy page renders
+   `<div role='listbox' class='dshp-menu' style='position:fixed; left:…; top:…'>`
+   inline in its own tree, placed from `getBoundingClientRect`. With the blur on
+   the card, that list resolved `fixed` against the card instead of the viewport,
+   so a viewport coordinate became a card-relative one: the list landed offset
+   from its trigger and was then clipped by the sheet's own `overflow: hidden`.
+   That is the "pushed the layout, then showed outside the window" report.
+
+   `:has` is live, so the blur drops exactly while a list is open and comes back
+   on close. The trigger's `aria-expanded` is checked too, so the guard also
+   covers a picker that mounts its list later in the same frame. */
 [data-dsh-aqua] body [role='dialog']:not([class*='backdrop'])
-  :is([class$='Card'], [class$='_card']) {
+  :is([class$='Card'], [class$='_card']):not(
+    :has([role='listbox'], [role='menu'], [aria-expanded='true'])
+  ) {
   background: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
   border-color: rgba(19, 45, 83, 0.12);
   box-shadow:
@@ -2026,7 +2163,9 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 [data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop'])
-  :is([class$='Card'], [class$='_card']) {
+  :is([class$='Card'], [class$='_card']):not(
+    :has([role='listbox'], [role='menu'], [aria-expanded='true'])
+  ) {
   background: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
   border-color: rgba(148, 180, 220, 0.18);
   box-shadow:
@@ -2709,8 +2848,17 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
 }
 
 /* Glass surfaces: menus and dialogs follow the site's frosted recipe
-   (standard `backdrop-filter` only —see the composer card note). */
-[data-dsh-float] [role='menu'] {
+   (standard `backdrop-filter` only —see the composer card note).
+
+   A menu from the `Menu` primitive paints its material on a `z-index: -1` child
+   that already reads `--dsw-menu-surface-fill` and
+   `--dsw-menu-backdrop-filter`; those two tokens are now answered on `body`
+   (see the top of this sheet), so that layer frosts on its own. Painting this
+   element too would stack a second wash on the same pixels and turn a 62% plate
+   into an 85% one, which is the opaque look we are removing. The exclusion is
+   the primitive's own marker — it puts `data-menu-material="translucent"` on the
+   surface element itself — so lists that paint themselves are untouched. */
+[data-dsh-float] [role='menu']:not([data-menu-material]) {
   background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
 }
@@ -2933,13 +3081,15 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
 }
 
 /* Context menus opened from inside the card get the same glass; the generic
-   role=menu rule above is a 62% wash for the same reason as the stock token. */
-[data-dsh-float] [data-composer-card] [role='menu'] {
+   role=menu rule above is a 62% wash for the same reason as the stock token.
+   Same exclusion as there: the primitive's own material layer already fills the
+   plate from the tokens, and a second wash on top of it is the opaque look. */
+[data-dsh-float] [data-composer-card] [role='menu']:not([data-menu-material]) {
   background: var(--dsh-aqua-glass-card-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
 }
 
-[data-dsh-float] body[data-ds-dark-theme] [data-composer-card] [role='menu'] {
+[data-dsh-float] body[data-ds-dark-theme] [data-composer-card] [role='menu']:not([data-menu-material]) {
   background: var(--dsh-aqua-glass-card-dark);
 }
 

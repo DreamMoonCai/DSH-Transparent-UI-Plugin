@@ -125,8 +125,20 @@ function fullViewport(dialog: HTMLElement): boolean {
   return rect.width >= window.innerWidth - 2 && rect.height >= window.innerHeight - 2
 }
 
-/** A menu the panel opens from a row; the kit draws it `position: fixed`. */
-const PANEL_MENU = '[role="menu"]'
+/**
+ * A menu the panel opens from a row; the kit draws it `position: fixed`.
+ *
+ * `role='listbox'` is here for the same reason. Third-party settings pages
+ * render their pickers by hand — the proxy plugin writes
+ * `<div role='listbox' class='dshp-menu' style='position:fixed; left:…'>`
+ * straight into its own React tree and places it from
+ * `getBoundingClientRect` — so the list is a `fixed` guest of the sheet exactly
+ * like a kit menu. Guarding only on `role='menu'` let the sheet keep its
+ * transform while such a list was open, and the list resolved `fixed` against
+ * the sheet: it landed offset from its trigger and got clipped by the scroller.
+ * That is the "pushed the layout, then showed outside the window" report.
+ */
+const PANEL_MENU = '[role="menu"], [role="listbox"]'
 
 /**
  * A main-area panel page (the plugin manager, scheduled tasks). Its class is
@@ -136,7 +148,7 @@ const PANEL_MENU = '[role="menu"]'
 const PLUGIN_PANEL = 'section[data-plugin-panel]'
 
 /** The plugin manager's "add plugin" dropdown; `position: fixed` from its trigger. */
-const PLUGIN_MENU = '[data-plugin-bar] [role="menu"], [data-plugin-panel] [role="menu"]'
+const PLUGIN_MENU = '[data-plugin-bar] [role="menu"], [data-plugin-panel] [role="menu"], [data-plugin-panel] [role="listbox"]'
 
 /** The glow is live only while its gate attribute is on <html>. */
 function glowGated(): boolean {
@@ -175,8 +187,10 @@ function tiltable(spot: HTMLElement): boolean {
   // A dialog sheet tilts like the other glass. Two exceptions. The image
   // viewer's mask IS the whole viewport, so a transform there would swing the
   // window edges (and its `position: fixed` picture buttons along with it).
-  // And a dialog carrying its own `position: fixed` guest — a menu opened from
-  // a row inside it — re-anchors that guest, the same trap as the sidebar.
+  // And a dialog carrying its own `position: fixed` guest — a menu or a
+  // hand-rolled listbox opened from a row inside it — re-anchors that guest, the
+  // same trap as the sidebar. Either only exists while it is open, so the sheet
+  // stands still exactly then.
   if (spot.matches(DIALOG)) {
     if (fullViewport(spot)) return false
     if (spot.querySelector(PANEL_MENU) !== null) return false

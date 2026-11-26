@@ -71,12 +71,23 @@ describe('the environment card turns to glass', () => {
     // The host reserves `border-right: 2px solid transparent` as the
     // scrollbar's lane and derives its right padding from it
     // (`8px - 2px - scrollbar-width`) under `scrollbar-gutter: stable`.
-    // Overriding the border shorthand shrank the content box and painted over
-    // that lane, so the vertical scrollbar landed on the content and read as an
-    // extra bar. An inset ring leaves the host's box untouched.
+    // An `inset` shadow is painted against the PADDING box, so that 2px
+    // transparent border pushed the ring 2px inside the real right edge and
+    // left a bare column. The border is dropped and the 2px moved into the
+    // padding, so the ring lands on the box the eye sees and the lane survives.
     const card = declarationsOf('[data-dsh-float] aside[data-session-panel]')
-    expect(card).not.toMatch(/(^|[\n;])\s*border(-(top|right|bottom|left|width|style|color))?\s*:/)
+    expect(card).toMatch(/border-right:\s*0/)
+    expect(card).toMatch(/padding-right:\s*calc\(8px - var\(--dsh-scrollbar-width, 6px\)\)/)
+    // No width/style/colour on any other edge — the ring is the inset shadow.
+    expect(card).not.toMatch(/\bborder(-top|-bottom|-left|-width|-style|-color)?\s*:/)
     expect(card).toMatch(/inset 0 0 0 1px rgba\(19, 45, 83, 0\.26\)/)
+  })
+
+  it('keeps the scrollbar lane the host reserved', () => {
+    // The lane is the difference between the host's padding and ours: both add
+    // up to `8px - scrollbar-width`, so the scrollbar's gutter stays put.
+    const card = declarationsOf('[data-dsh-float] aside[data-session-panel]')
+    expect(card).toMatch(/padding-right:\s*calc\(8px - var\(--dsh-scrollbar-width, 6px\)\)/)
   })
 
   it('keeps the overlay presentation denser than the docked one', () => {
@@ -89,13 +100,16 @@ describe('the environment card turns to glass', () => {
 
   it('leaves the host geometry alone', () => {
     // The host positions the aside from the chat gutter and caps its height
-    // against the composer; overriding any of those would detach it.
+    // against the composer; overriding any of those would detach it. The
+    // property name is matched at a declaration start — `\b` would also hit
+    // `padding-right`.
     const card = declarationsOf('[data-dsh-float] aside[data-session-panel]')
-    expect(card).not.toMatch(/\btop:/)
-    expect(card).not.toMatch(/\bright:/)
-    expect(card).not.toMatch(/\bwidth:/)
-    expect(card).not.toMatch(/max-height:/)
-    expect(card).not.toMatch(/position:/)
+    const declares = (name: string): boolean => new RegExp(`(^|[\\s;])${name}\\s*:`).test(card)
+    expect(declares('top')).toBe(false)
+    expect(declares('right')).toBe(false)
+    expect(declares('width')).toBe(false)
+    expect(declares('max-height')).toBe(false)
+    expect(declares('position')).toBe(false)
   })
 
   it('matches the real host hook, not a hashed class name', () => {
@@ -114,10 +128,9 @@ describe('the panel takes the same press as the other panes', () => {
   })
 
   it('clips the x axis so the glow overlay cannot grow a scrollbar', () => {
-    // The glow overlay is absolutely positioned and sized from `offsetWidth`,
-    // whose containing block here is the PADDING box — one border-width too
-    // wide on each side. Inside a card that owns `overflow-y: auto`, that 2px
-    // grew a horizontal scrollbar on every hover.
+    // The glow overlay is absolutely positioned, so `overflow-x: clip` is the
+    // guard on the axis the card must not scroll — the sections still need the
+    // vertical one.
     const card = declarationsOf('[data-dsh-float] aside[data-session-panel]')
     expect(card).toMatch(/overflow-x:\s*clip/)
     // The sections still scroll vertically.

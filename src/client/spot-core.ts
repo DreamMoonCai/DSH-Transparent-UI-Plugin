@@ -73,6 +73,26 @@ function localTopLeft(el: HTMLElement, ancestor: HTMLElement): { x: number; y: n
 }
 
 /**
+ * The padding box of a pane — the box an absolutely positioned `inset: 0`
+ * child resolves against, which is what the glow overlay needs to fill.
+ *
+ * `clientWidth`/`clientHeight` are wrong here for two separate reasons:
+ * they exclude the border (so the overlay stopped at the border's inner edge)
+ * and they exclude a `scrollbar-gutter: stable` lane (so it stopped 6px short
+ * down the right side of a pane that reserves one for the same reason). The
+ * border box minus the border widths is exactly the padding box, lane and all.
+ */
+function paddingBox(el: HTMLElement): { width: number; height: number } {
+  const style = getComputedStyle(el)
+  const horizontal = Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.borderRightWidth)
+  const vertical = Number.parseFloat(style.borderTopWidth) + Number.parseFloat(style.borderBottomWidth)
+  return {
+    width: el.offsetWidth - (Number.isFinite(horizontal) ? horizontal : 0),
+    height: el.offsetHeight - (Number.isFinite(vertical) ? vertical : 0),
+  }
+}
+
+/**
  * The visible glass region of a pane in the pane's own local space
  * (untransformed — safe to measure while tilted). For the fused
  * composer+stats spot this is the union of the composer card and the docked
@@ -81,12 +101,8 @@ function localTopLeft(el: HTMLElement, ancestor: HTMLElement): { x: number; y: n
 export function glassLocalRect(spot: HTMLElement): { left: number; top: number; width: number; height: number } {
   const card = spot.querySelector<HTMLElement>('[data-composer-card]')
   if (card === null) {
-    // The glow overlay is absolutely positioned, so its containing block is
-    // the PADDING box — `offsetWidth/offsetHeight` would measure the border box
-    // and overshoot by the border on each side. Panes with no border see no
-    // difference; a pane that owns `overflow: auto` AND a border (the session
-    // panel) turns that overshoot into a scrollbar on every hover.
-    return { left: 0, top: 0, width: spot.clientWidth, height: spot.clientHeight }
+    const box = paddingBox(spot)
+    return { left: 0, top: 0, width: box.width, height: box.height }
   }
   const cardPos = localTopLeft(card, spot)
   let left = cardPos.x

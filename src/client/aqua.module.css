@@ -1048,22 +1048,21 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    variants below.
 
    The ring is drawn with an inset shadow, never with `border`. The host
-   reserves `border-right: 2px solid transparent` as the scrollbar's lane and
-   derives its right padding from it (`8px - 2px - scrollbar-width`) under
-   `scrollbar-gutter: stable`. Overriding the border shorthand shrank the
-   content box by the new edges and painted over that lane, so the vertical
-   scrollbar landed on the content and read as an extra bar. An inset ring
-   leaves the host's box exactly as it computed it.
+   reserves a right lane for the vertical scrollbar — `border-right: 2px solid
+   transparent` plus `padding-right: calc(8px - 2px - scrollbar-width)` under
+   `scrollbar-gutter: stable`. An `inset` shadow is painted against the PADDING
+   box, so that 2px transparent border pushed the ring 2px inside the real edge
+   and left a bare column down the right side; the glow overlay fell short for
+   its own reason (see `glassLocalRect`).
 
-   `overflow-x: clip` is what lets it take the same hover treatment as the
-   rest. The glow overlay is an absolutely positioned child, so its containing
-   block here is the PADDING box, and it used to be sized from the border box
-   — one border-width too wide on each side. The overlay is now measured
-   against the padding box (see `glassLocalRect`); `clip` stays as the
-   belt-and-braces guard on the x axis without touching the vertical scrolling
-   the sections need. ---------- */
+   The lane is kept, only moved: the 2px that lived in the border now lives in
+   the padding (`calc(8px - scrollbar-width)`), so the content box is exactly
+   the size the host computed, the scrollbar keeps its lane, and the ring lands
+   on the border box because there is no border left to skip. ---------- */
 [data-dsh-float] aside[data-session-panel] {
   border-radius: 20px;
+  border-right: 0;
+  padding-right: calc(8px - var(--dsh-scrollbar-width, 6px));
   background: var(--dsh-aqua-glass-card-light);
   box-shadow:
     inset 0 0 0 1px rgba(19, 45, 83, 0.26),

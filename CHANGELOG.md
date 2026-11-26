@@ -1,11 +1,16 @@
 # Changelog
 
-## v1.6.0
+## v1.6.1
 
 - Let the environment card's glass reach its own right edge. The host reserves a lane for its scrollbar with `border-right: 2px solid transparent` and `padding-right: calc(8px - 2px - scrollbar-width)` under `scrollbar-gutter: stable`; an `inset` ring is painted against the padding box, so that transparent border left a bare column down the right side. The border is gone and the same 2px sits in the padding now, so the ring lands where the eye expects and the scrollbar keeps its lane.
 - Make the glow overlay fill the pane it belongs to. It is `position: absolute; inset: 0`, so it resolves against the padding box, but it was sized from `clientWidth`/`clientHeight` — which exclude both the border and a reserved scrollbar gutter. On the environment card that left the glow short down the right side. The overlay now measures the padding box (border box minus border widths), so it covers the lane as well.
 - Keep a hover tooltip readable. The tooltip's own class is `hxWHXa_bubble`, so the chat-bubble rule matched it and gave the tip a 42% white fill, while its label keeps the host's `--dsw-alias-tooltip-label` — white in both schemes. White on white left every tooltip blank. The bubble recipe now excludes `[role='tooltip']`, and the tip keeps its own dark surface with the frost family's shadow.
 - Give a checked switch a track its thumb can be seen against. The host paints the track with the brand colour, which this skin sets to the brand ink, so a white thumb on a near-white track vanished in dark mode. The track now uses the button fill.
+- Release the pressed pane and its lifted titlebar buttons in the same frame, and key those buttons per pane rather than per session. The settle timer used to drop the inline transform while the transition was still running, which left a computed transform on the card for another 300ms; a button restored inside that window was re-anchored to the card's corner and flashed. A fast in-and-out could also leave a button behind a transform it never left.
+- Stop the pane rule from re-positioning a dialog. The stats popover is `role='dialog'` with `position: fixed` and CSS anchor positioning, so the generic pane rule's `position: relative` dropped it out of its anchor and it laid out at the end of the document instead of under its pill.
+
+## v1.6.0
+
 - Let the sidebar card tilt with the others. Its two `position: fixed` titlebar buttons are lifted to `<body>` for the duration of a press, so they keep resolving against the viewport while the card rotates, and are put back at their original slot afterwards.
 - Skin the shared segmented tabs. Both host implementations are covered — the plugin manager's installed / marketplace pair and the model page's provider switch — with one neutral track, a hairline and a light blur, plus a sliding indicator that reads as a raised pane. A plain `role='tablist'` row of buttons is excluded by requiring the sliding child.
 - Soften the second-level surface in one place. `--dsw-alias-bg-module-platform` is the host's second-level glass across 85 rules in 46 files; it is translucent now, and `--dsw-specific-menu` follows, so popovers, the queue dock, the todo panel, the goal bar and the forge change rows stop being white slabs.

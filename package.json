@@ -1,7 +1,7 @@
 {
   "name": "dsh-driftglass",
   "description": "Deep-sea glass theme for DSH 0.2.2-rc.1 desktop and web",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "publishConfig": {
     "access": "public"
   },

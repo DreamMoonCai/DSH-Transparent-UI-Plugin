@@ -584,29 +584,45 @@
 }
 
 /* Chat bubbles become glass: dark mode = black glass, light = frosted
-   white, both with a backdrop blur so the fluid shimmers behind the text. */
-[data-dsh-float] [class*='bubble'] {
+   white, both with a backdrop blur so the fluid shimmers behind the text.
+
+   `:not([role='tooltip'])` is load-bearing. The tooltip's class is
+   `hxWHXa_bubble`, so a bare `[class*='bubble']` matched it and gave the tip a
+   42% white fill — while its label keeps the host's
+   `--dsw-alias-tooltip-label`, which is white in both schemes. White on white is
+   unreadable, and that is exactly how a hover tip looked. */
+[data-dsh-float] [class*='bubble']:not([role='tooltip']) {
   border-radius: 14px;
   border: 1px solid rgba(19, 45, 83, 0.14);
   background: color-mix(in srgb, rgb(255 255 255) calc(42% * var(--dsh-aqua-frost, 1)), transparent);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
 }
 
-[data-dsh-float] body[data-ds-dark-theme] [class*='bubble'] {
+[data-dsh-float] body[data-ds-dark-theme] [class*='bubble']:not([role='tooltip']) {
   border-color: rgba(148, 180, 220, 0.14);
   background: color-mix(in srgb, rgb(0 0 0) calc(40% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 /* Video wallpaper: bubbles carry a REAL plate (frost-independent) so the
    text never fights the film; the backdrop blur still frosts the video. */
-html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] [class*='bubble'] {
+html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] [class*='bubble']:not([role='tooltip']) {
   background: color-mix(in srgb, rgb(255 255 255) 70%, transparent);
   border-color: rgba(19, 45, 83, 0.2);
 }
 
-html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[data-ds-dark-theme] [class*='bubble'] {
+html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[data-ds-dark-theme] [class*='bubble']:not([role='tooltip']) {
   background: color-mix(in srgb, rgb(0 0 0) 50%, transparent);
   border-color: rgba(148, 180, 220, 0.22);
+}
+
+/* A tooltip is a small dark chip over everything, not a pane of the glass: it is
+   transient, its label is white by design, and it has to stay legible against
+   whatever it covers. Its surface is `--dsw-alias-tooltip-bg`; the skin only
+   gives it the frost family's radius and a shadow so it belongs. */
+[data-dsh-float] [role='tooltip'] {
+  border: 0;
+  backdrop-filter: none;
+  box-shadow: 0 6px 20px rgba(2, 6, 14, 0.28);
 }
 
 /* Card family (hover cards, panels, plugin cards, tool cards, the composer). */

@@ -2,6 +2,8 @@
 
 ## v1.6.0
 
+- Keep a hover tooltip readable. The tooltip's own class is `hxWHXa_bubble`, so the chat-bubble rule matched it and gave the tip a 42% white fill, while its label keeps the host's `--dsw-alias-tooltip-label` — white in both schemes. White on white left every tooltip blank. The bubble recipe now excludes `[role='tooltip']`, and the tip keeps its own dark surface with the frost family's shadow.
+- Give a checked switch a track its thumb can be seen against. The host paints the track with the brand colour, which this skin sets to the brand ink, so a white thumb on a near-white track vanished in dark mode. The track now uses the button fill.
 - Let the sidebar card tilt with the others. Its two `position: fixed` titlebar buttons are lifted to `<body>` for the duration of a press, so they keep resolving against the viewport while the card rotates, and are put back at their original slot afterwards.
 - Skin the shared segmented tabs. Both host implementations are covered — the plugin manager's installed / marketplace pair and the model page's provider switch — with one neutral track, a hairline and a light blur, plus a sliding indicator that reads as a raised pane. A plain `role='tablist'` row of buttons is excluded by requiring the sliding child.
 - Soften the second-level surface in one place. `--dsw-alias-bg-module-platform` is the host's second-level glass across 85 rules in 46 files; it is translucent now, and `--dsw-specific-menu` follows, so popovers, the queue dock, the todo panel, the goal bar and the forge change rows stop being white slabs.

@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="DSH 0.2.3-alpha.2" src="https://img.shields.io/badge/DSH-0.2.3--alpha.2-0f766e?style=flat-square">
-  <img alt="版本 1.6.1" src="https://img.shields.io/badge/version-1.6.1-0b3b4a?style=flat-square">
+  <img alt="版本 1.6.2" src="https://img.shields.io/badge/version-1.6.2-0b3b4a?style=flat-square">
   <img alt="AGPL-3.0 许可" src="https://img.shields.io/badge/license-AGPL--3.0-0f766e?style=flat-square">
   <img alt="Desktop 与 Web" src="https://img.shields.io/badge/platform-Desktop%20%2B%20Web-134e4a?style=flat-square">
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img alt="powered by dsh" src="https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white"></a>
@@ -18,9 +18,29 @@
 
 *截图来自本项目的实际界面；DSH 自身文案跟随你的语言设置。*
 
-Driftglass 是 [WYH66666666 的 Aqua v1.3.0](https://github.com/WYH66666666/DSH-Transparent-UI-Plugin) 的 fork，按 **DSH 0.2.3-alpha.2** 重建。原版的材质系统完整保留；这个 fork 把它带进当前的 Harness：一个能安装的包、一层铺到页面边缘的背景、三块主面板共用的一套卡片语言，以及可以分别跟随浅色和深色的壁纸。
+Driftglass 是一个 fork 链的末端：[WYH66666666 的 Aqua v1.3.0](https://github.com/WYH66666666/DSH-Transparent-UI-Plugin) → [realhenrylan](https://github.com/realhenrylan/DSH-Transparent-UI-Plugin) 维护的 v1.5.0 → [本仓](https://github.com/DreamMoonCai/DSH-Transparent-UI-Plugin)。下面两张表分别说明这条链上的两段：第一张是本仓相对 v1.5.0 做了什么，第二张是 realhenrylan 相对原始 Aqua v1.3.0 做了什么。
+
+## 相对 v1.5.0 的改动
+
+本仓从 [realhenrylan/DSH-Transparent-UI-Plugin](https://github.com/realhenrylan/DSH-Transparent-UI-Plugin) 的 v1.5.0 分叉，把主题推到 DSH 0.2.3，并把「玻璃」从三块主面板补到界面上每一个还在用不透明色块的地方。
+
+| 方面 | 相对 v1.5.0 基线 |
+| --- | --- |
+| **DSH 0.2.3** | 从 0.2.2-rc.1 适配到 0.2.3-alpha.2：dockkit 把 CSS Module 改名，右侧工作台的 seam 改为读 `data-dockkit-*` 属性；manifest 的 `engines.dsh` 提到 `>=0.2.3-alpha.2 <0.3.0-0`，并加了双向边界测试。 |
+| **侧栏压感** | 左侧大卡片加入悬停倾斜。它的两个 `position: fixed` 标题栏按钮在按压期间被临时挂到 `<body>`，因此不会跟着卡片旋转错位；松开与归位在同一帧完成。 |
+| **会话面板** | 环境卡片从两张拼图变成一张玻璃：共用一套材质、悬停用阴影表达按压而不是加 transform，右侧滚动条槽保留自己的宽度。 |
+| **原生下拉框** | `<select>` 弹出层原本是系统白板。用 `appearance: base-select`（`@supports` 守卫）把它拉进页面，`::picker(select)`、`option`、`::checkmark` 套上同一套磨砂配方，展开时从 0.96 升起。 |
+| **弹窗与浮层** | 设置面板、确认框、图片查看器加入悬浮玻璃；`role='menu'`、`role='listbox'`、popper 卡片、hover 卡片和 diff 预览都拿到同一档按压与材质。 |
+| **标题与代码** | 工作台的选中标签从平灰块变玻璃；展开的「思考」行吸顶表头、对话里的代码块（含 shiki 行内背景与块头）、终端面板各自换成对应层级的玻璃。 |
+| **面板内部** | 设置面板里的行、内嵌卡片、插件管理页、定时任务页、已编辑文件卡片、共享分段标签、修改说明卡片，都在自己的作用域里重新指向半透明 token。 |
+| **滚动条** | 从中性墨色代替品牌蓝开始，加了顶光扫过的拇指与只在悬停时出现的槽；槽宽仍是宿主的 5px，因为别的表面拿它算内边距。 |
+| **原生控件** | `checkbox` 和 `radio` 改用 `appearance: none` 自绘：内嵌凹槽、勾选时用行动色、对号用 mask 跟随反色墨水。 |
+| **对比度修复** | 修掉了白字白底的工具提示、深色下看不见的开关滑块、被顶栏盖住的代码块表头、以及按压卡片时整列跳 5px 的横向滚动条。 |
+| **测试** | 7 个文件 52 项 → 29 个文件 279 项，覆盖每一条 seam、每一处配方的作用域，以及「关掉主题必须完全回到原生」这条不变式。 |
 
 ## 相对 v1.3.0 的改动
+
+*以下是 realhenrylan 在 v1.5.0 里相对原始 Aqua v1.3.0 做的改动，原样保留。*
 
 | 方面 | 相对 v1.3.0 基线 |
 | --- | --- |
@@ -101,7 +121,7 @@ Chromium 可以记住视频文件的授权；其他浏览器会回落到本地�
 | **字体** | 拉丁字母和数字用 Space Grotesk，正文与展示用中日韩衬线体（Noto Serif SC、Songti/STSong、SimSun），标题和会话树用衬线，圆角语言为 14/10/8px。 |
 | **一个开关** | 关掉主题就回到原生界面；卸载插件会一起移除注入层。 |
 | **多窗口** | 打开多个窗口时设置保持同步。 |
-| **有测试** | 七个文件共 52 项检查：包契约、外观、背景、面板、壁纸选择和 Windows 窗口。 |
+| **有测试** | 29 个文件共 279 项检查：包契约、外观、背景、面板、壁纸选择、原生控件、悬浮卡片、终端与代码块。 |
 
 ## 控件
 

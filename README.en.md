@@ -6,7 +6,7 @@ English | [中文](README.md)
 
 <p align="center">
   <img alt="DSH 0.2.3-alpha.2" src="https://img.shields.io/badge/DSH-0.2.3--alpha.2-0f766e?style=flat-square">
-  <img alt="Version 1.6.1" src="https://img.shields.io/badge/version-1.6.1-0b3b4a?style=flat-square">
+  <img alt="Version 1.6.2" src="https://img.shields.io/badge/version-1.6.2-0b3b4a?style=flat-square">
   <img alt="AGPL-3.0 license" src="https://img.shields.io/badge/license-AGPL--3.0-0f766e?style=flat-square">
   <img alt="Desktop and Web" src="https://img.shields.io/badge/platform-Desktop%20%2B%20Web-134e4a?style=flat-square">
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img alt="powered by dsh" src="https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white"></a>
@@ -18,9 +18,29 @@ English | [中文](README.md)
 
 *Screenshots are from this project. DSH's own copy follows your locale.*
 
-Driftglass is the fork of [WYH66666666's Aqua v1.3.0](https://github.com/WYH66666666/DSH-Transparent-UI-Plugin) rebuilt for **DSH 0.2.3-alpha.2**. The original material system is still here. The fork carries it into the current Harness: a package that installs, a backdrop that reaches the page edge, one card language on all three main panels, and wallpapers that can follow light and dark separately.
+Driftglass is the end of a fork chain: [WYH66666666's Aqua v1.3.0](https://github.com/WYH66666666/DSH-Transparent-UI-Plugin) → v1.5.0 maintained by [realhenrylan](https://github.com/realhenrylan/DSH-Transparent-UI-Plugin) → [this repository](https://github.com/DreamMoonCai/DSH-Transparent-UI-Plugin). The two tables below cover the two links: the first is what this fork adds on top of v1.5.0, the second is what realhenrylan added on top of the original Aqua v1.3.0.
 
-## What this fork changes
+## What this fork changes since v1.5.0
+
+This repository forks [realhenrylan/DSH-Transparent-UI-Plugin](https://github.com/realhenrylan/DSH-Transparent-UI-Plugin) at v1.5.0, carries the theme to DSH 0.2.3, and extends the glass from the three main panels to every surface that was still an opaque block.
+
+| Area | Since the v1.5.0 baseline |
+| --- | --- |
+| **DSH 0.2.3** | Adapted from 0.2.2-rc.1 to 0.2.3-alpha.2: dockkit renamed its CSS modules, so the right workbench seams now key off the `data-dockkit-*` attributes; `engines.dsh` moves to `>=0.2.3-alpha.2 <0.3.0-0` with a two-sided boundary test. |
+| **Sidebar press** | The left card tilts with the others. Its two `position: fixed` titlebar buttons are lifted to `<body>` during a press so they keep resolving against the viewport, and the release and the restore land in the same frame. |
+| **Session panel** | The environment card becomes one pane of glass: one material, a press expressed by shadow instead of a transform, and the host's scrollbar lane kept at its own width. |
+| **Native selects** | The `<select>` popup was a system white sheet. `appearance: base-select` (behind `@supports`) renders it in the page so `::picker(select)`, `option` and `::checkmark` take the same frosted recipe, rising from 0.96 on open. |
+| **Dialogs and popups** | The settings sheet, the confirm panels and the image viewer join the floating panes; `role='menu'` lists, `role='listbox'` pickers, popper cards, hover cards and the diff preview all get the same press and material. |
+| **Type and code** | The workbench's active tab chip goes from flat grey to glass; the pinned header of an expanded reasoning row, a transcript code block (including shiki's inline background and its banner) and the terminal pane each move to their own layer of the material. |
+| **Inside panels** | Settings rows, in-sheet cards, the plugin manager, scheduled tasks, the edited-files card, the shared segmented tabs and the change-request card all re-point their surfaces to translucent tokens in their own scope. |
+| **Scrollbars** | Neutral ink instead of the brand blue, a specular sweep down the thumb, and a groove that only appears under the pointer. The lane stays the host's 5px because other surfaces derive their padding from it. |
+| **Native controls** | `checkbox` and `radio` are drawn by this sheet through `appearance: none`: an inset well, the action fill when checked, and a tick masked in the inverted ink. |
+| **Contrast fixes** | White-on-white tooltips, a switch thumb invisible in dark mode, a code block banner sliding under the header, and the 5px column jump caused by the press growing a horizontal scrollbar. |
+| **Tests** | 7 files / 52 checks → 29 files / 279 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
+
+## What the v1.5.0 baseline changed since v1.3.0
+
+*This table is what realhenrylan added on top of the original Aqua v1.3.0, kept as written.*
 
 | Area | Since the v1.3.0 baseline |
 | --- | --- |
@@ -101,7 +121,7 @@ The composer and statistics line share one pane of glass, so the divider lands e
 | **Typography** | Space Grotesk for Latin and digits, a serif CJK face for body and display (Noto Serif SC, Songti/STSong, SimSun), serif headings and conversation tree, and a 14/10/8px radius language. |
 | **One switch** | Turn the theme off and the stock UI comes back; uninstall removes the layer with the plugin. |
 | **Multi-window** | Settings stay in sync when more than one window is open. |
-| **Tested** | 52 checks across seven files: package contract, appearance, backdrops, panels, wallpaper selection, and Windows chrome. |
+| **Tested** | 279 checks across 29 files: package contract, appearance, backdrops, panels, wallpaper selection, native controls, hover cards, the terminal and code blocks. |
 
 ## Controls
 

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+﻿import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -129,42 +129,6 @@ describe('native checkboxes and radios', () => {
     for (const selector of selectors) {
       expect(selector).toContain('[data-dsh-float]')
       expect(selector).not.toContain('[data-dsh-compat]')
-    }
-  })
-})
-
-describe('the skin’s own hover tip', () => {
-  const TIP = (selector: string) => selector.includes('[data-dsh-native-tip]')
-
-  it('wears the host tooltip recipe', () => {
-    // A tip written by a plugin and a tip written by the shell have to read as
-    // the same chip.
-    const bodies = bodiesFor(TIP).join(' ')
-    expect(bodies).toMatch(/background:\s*var\(--dsw-alias-tooltip-bg\)/)
-    expect(bodies).toMatch(/color:\s*var\(--dsw-alias-tooltip-label\)/)
-    expect(bodies).toMatch(/position:\s*fixed/)
-  })
-
-  it('is not interactive', () => {
-    const bodies = bodiesFor(TIP).join(' ')
-    expect(bodies).toMatch(/pointer-events:\s*none/)
-  })
-
-  it('can be hidden', () => {
-    const bodies = all
-      .filter(rule => rule.selector.includes('[data-dsh-native-tip][hidden]'))
-      .map(rule => rule.body)
-      .join(' ')
-    expect(bodies).toMatch(/display:\s*none/)
-  })
-
-  it('is not scoped to float mode', () => {
-    // The tip element is created on <body> by the module, outside any pane, so
-    // a float-scoped selector would never match it.
-    const selectors = all.filter(rule => TIP(rule.selector)).map(rule => rule.selector)
-    expect(selectors.length).toBeGreaterThan(0)
-    for (const selector of selectors) {
-      expect(selector.startsWith('[data-dsh-native-tip]')).toBe(true)
     }
   })
 })

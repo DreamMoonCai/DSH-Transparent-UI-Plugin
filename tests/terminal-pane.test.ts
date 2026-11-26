@@ -80,32 +80,36 @@ describe('the terminal pane keeps its own sheet of glass', () => {
     expect(flat).toContain(':global(.xterm-viewport)')
   })
 
-  it('replaces the opaque canvas fill with the secondary glass', () => {
+  it('gives xterm an opaque colour — a translucent one turns the canvas black', () => {
+    // The pane feeds xterm its theme background from
+    // `getComputedStyle(screen).backgroundColor`, and the host builds xterm with
+    // the default `allowTransparency: false`. Under that option xterm composites
+    // a translucent colour onto black, so a `color-mix(... , transparent)` fill
+    // turned the whole terminal into a black rectangle. An opaque rgb()/hex is
+    // the only kind it accepts, and a computed `color(srgb …)` would not parse.
     const bodies = bodiesFor(SCREEN).join(' ')
-    expect(bodies).toMatch(/background:\s*color-mix\(/)
-    expect(bodies).toMatch(/rgb\(255 255 255\)/)
-    expect(bodies).toMatch(/--dsh-aqua-frost/)
-    // The host value was the opaque canvas colour; it must not survive.
+    const paints = [...bodies.matchAll(/background:\s*([^;]+);/g)].map(match => match[1].trim())
+    expect(paints.length).toBeGreaterThan(0)
+    for (const paint of paints) {
+      // An opaque hex or rgb() with no alpha channel, and no token hop that
+      // could resolve to something translucent later.
+      expect(paint, `translucent screen fill: ${paint}`).toMatch(/^(#[0-9a-f]{6}|rgb\(\s*\d+ \d+ \d+\s*\))$/i)
+    }
     expect(bodies).not.toMatch(/var\(--dsw-alias-bg-base\)/)
   })
 
   it('reads as an inset screen, not a flat panel', () => {
     const bodies = bodiesFor(SCREEN).join(' ')
     expect(bodies).toMatch(/border-radius:\s*14px/)
-    expect(bodies).toMatch(/inset 0 1px 0 rgba\(255, 255, 255, 0\.5\)/)
-    expect(bodies).toMatch(/inset 0 0 0 1px rgba\(255, 255, 255, 0\.16\)/)
-    expect(bodies).toMatch(/backdrop-filter:\s*blur\(/)
-  })
-
-  it('blurs behind the screen so the water still shows through', () => {
-    const bodies = bodiesFor(SCREEN).join(' ')
-    expect(bodies).toMatch(/backdrop-filter:\s*blur\(calc\(var\(--dsh-aqua-blur, 14px\) \* 0\.7\)\)/)
+    expect(bodies).toMatch(/inset 0 1px 0 rgba\(255, 255, 255, 0\.62\)/)
+    expect(bodies).toMatch(/inset 0 0 0 1px rgba\(19, 45, 83, 0\.1\)/)
+    expect(bodies).toMatch(/overflow:\s*hidden/)
   })
 
   it('has a dark counterpart on the same shape', () => {
     const bodies = bodiesFor(SCREEN_DARK).join(' ')
-    expect(bodies).toMatch(/rgb\(226 236 250\)/)
-    expect(bodies).toMatch(/inset 0 1px 0 rgba\(255, 255, 255, 0\.06\)/)
+    expect(bodies).toMatch(/background:\s*#[0-9a-f]{6}/)
+    expect(bodies).toMatch(/inset 0 1px 0 rgba\(255, 255, 255, 0\.07\)/)
   })
 
   it('stops xterm from painting the fill a second time', () => {

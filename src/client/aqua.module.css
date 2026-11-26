@@ -1677,6 +1677,47 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   color: color-mix(in srgb, var(--dsw-alias-label-primary) 22%, transparent);
 }
 
+/* ---------- The terminal pane: a screen, not a sheet of paper.
+
+   The pane's screen is painted `background: var(--dsw-alias-bg-base)` — the
+   canvas colour, which this theme resolves to an opaque `#F4F8FD` / `#0C121B`.
+   Full-height and full-width, that is a solid sheet inside a glass card, and it
+   is the one surface in the column that never showed the water.
+
+   The pane keeps its own material instead: the secondary-glass fill scaled by
+   the frost knob, a top highline and a hairline, and a light blur, so the
+   terminal reads as an inset screen rather than as a window cut out of the card.
+
+   xterm must not paint over it. It reads the wrapper's computed colour as its
+   theme background and writes that value onto `.xterm-viewport` as an INLINE
+   style, so the fill would land twice — once on the wrapper, once on the
+   viewport — and the second copy would hide the blur. The viewport therefore
+   gives up its paint with `!important` (the only way past an inline style) and
+   keeps everything it actually needs: the rows, the scrollbar and the selection.
+
+   The seam is the host's own `data-sidebar-terminal` on the section; the screen
+   is found structurally (`:has(> .xterm)`) because its class is build-hashed,
+   while `.xterm` and `.xterm-viewport` are xterm's own stable names. ---------- */
+[data-dsh-float] [data-sidebar-terminal] :has(> .xterm) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.7));
+}
+
+[data-dsh-float] [data-sidebar-terminal] .xterm-viewport {
+  background: transparent !important;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-sidebar-terminal] :has(> .xterm) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
 /* ---------- Segmented tabs: the shared control, in one place.
 
    The host renders two of them from `src/SegmentedTabs` and

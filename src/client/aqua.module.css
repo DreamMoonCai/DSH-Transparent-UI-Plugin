@@ -140,25 +140,67 @@
    This card does clip — it is a floating plate with rounded corners and an
    inset — so the widened panel was cut back to the card. The tab's content had
    already switched, but the only part on screen was the strip nearest the right
-   edge, which reads as "nothing happened". The card's `isolation: isolate` made
-   it worse: the panel's dock layer (40) was trapped inside the card's stacking
-   context instead of covering the frame.
+   edge, which reads as "nothing happened".
 
-   While a fullscreen panel is mounted the card steps out of the way — no clip,
-   no margin, no own ink, no stacking context — so the panel covers the viewport
-   the way the host designed. The docked panel keeps every rule above; the
-   `:has()` guard is the same structural test the host uses to size the panel. ---------- */
+   While a fullscreen panel is mounted the card steps out of its own geometry —
+   no clip, no margin, no own ink — so the panel covers the viewport the way the
+   host designed. The docked panel keeps every rule above; the `:has()` guard is
+   the same structural test the host uses to size the panel.
+
+   Rank and context belong to the CARD, not the panel, for two reasons that pull
+   in opposite directions:
+
+   - The card keeps `isolation: isolate` because its own glow overlay is a
+     `z-index: -1` child; without a stacking context the glow would fall behind
+     the page.
+   - Because of that context, the panel's dock rank (40) never reaches the frame,
+     so the CARD is what has to outrank the conversation. 41 clears the panel's
+     own 40 and sits far above the header and composer cards' 8 — which is
+     exactly what "the fullscreen page is above the title bar and the composer"
+     means.
+
+   The card is also the element the spotlight measures, and it normally equals
+   the right column's grid track. The frame keeps that track at its docked width
+   in both modes — that is what lets the panel slide out on close — so a card at
+   track width only gives the pointer a right-hand strip to answer, which is the
+   half-effect the screenshots showed.
+
+   The card is NOT moved to the viewport here. It has no `pointer-events` rule
+   of its own and it sits above everything at 41, so a viewport-sized card would
+   swallow every click meant for the page underneath. The spotlight instead
+   measures the panel when one is mounted — see `visualRect`/`glassLocalRect` in
+   `spot-core.ts` — which needs nothing from the layout. `overflow: visible`
+   above is what lets the glow paint outside the card's own box. */
 [data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen']) {
+  position: relative;
+  z-index: 41;
   margin: 0;
   border: 0;
   border-radius: 0;
   box-shadow: none;
   overflow: visible;
-  isolation: auto;
+  isolation: isolate;
   background: transparent;
 }
 
 [data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen'])::before {
+  display: none;
+}
+
+/* The sidebar card under a fullscreen page has nothing left to be.
+
+   The page covers the viewport, so the column behind it is a strip of glass
+   showing through wherever the page does not paint — which is why collapsing
+   the sidebar looked like the card stayed while its contents left. Nothing of
+   the frame is meant to be visible in this presentation, so the card drops its
+   fill and its ring for as long as the panel is out. The stock collapse still
+   owns the column's width, so closing fullscreen restores everything as it was. */
+[data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen']) [class*='sidebarCol'] {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+[data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen']) [class*='sidebarCol']::before {
   display: none;
 }
 
@@ -185,7 +227,6 @@
   background: var(--dsh-aqua-glass-card-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px)) saturate(1.15);
 }
-
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
   background: var(--dsh-aqua-glass-card-dark);
 }

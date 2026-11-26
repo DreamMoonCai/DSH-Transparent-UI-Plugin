@@ -65,11 +65,15 @@ describe('the workbench panel in fullscreen', () => {
     expect(bodies).toMatch(/background:\s*(transparent|0 0)/)
   })
 
-  it('drops its stacking context, so the panel can cover the frame', () => {
-    // The card's `isolation: isolate` traps the panel's dock layer (40) inside
-    // the card instead of letting it cover the frame.
+  it('ranks itself above the conversation, since the panel cannot', () => {
+    // The card keeps `isolation: isolate` (its glow is a z-index -1 child), so
+    // the panel's dock rank of 40 never reaches the frame. The card is what has
+    // to outrank the header and composer cards, which sit at 8.
     const bodies = all.filter(rule => CARD(rule.selector)).map(rule => rule.body).join(' ')
-    expect(bodies).toMatch(/isolation:\s*auto/)
+    const rank = /z-index:\s*(\d+)/.exec(bodies)
+    expect(rank).not.toBeNull()
+    expect(Number(rank![1])).toBeGreaterThan(40)
+    expect(bodies).toMatch(/isolation:\s*isolate/)
   })
 
   it('hides its own glass while the panel is out', () => {

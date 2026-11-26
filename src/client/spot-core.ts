@@ -31,11 +31,20 @@ export function spotElements(): HTMLElement[] {
   return Array.from(document.querySelectorAll<HTMLElement>(SPOT_SELECTOR))
 }
 
+/** The fullscreen workbench panel, when one is mounted inside a spot. */
+const FULLSCREEN_PANEL = '[data-sidebar-right-panel="fullscreen"]'
+
 /**
  * The visible glass region of a pane (viewport rect). The fused
  * composer+stats spot is the wider invisible inputbar wrapper — its glass is
  * the union of the composer card and the docked stats band, so the wrapper's
  * side gutters stay outside every effect.
+ *
+ * A workbench card hosting a fullscreen panel is the page, not the card: the
+ * host widens the panel to `calc(100vw + 1px)` and lets it hang leftward out of
+ * the column track, while the card itself keeps the track's width. Measuring the
+ * card there bounded the glow and the press to the right-hand strip. The panel
+ * is measured instead.
  */
 export function visualRect(spot: HTMLElement): DOMRect {
   if (spot.querySelector('[data-composer-card]') !== null) {
@@ -48,6 +57,8 @@ export function visualRect(spot: HTMLElement): DOMRect {
     const top = Math.min(r0.top, r1.top)
     return new DOMRect(left, top, Math.max(r0.right, r1.right) - left, Math.max(r0.bottom, r1.bottom) - top)
   }
+  const panel = spot.querySelector<HTMLElement>(FULLSCREEN_PANEL)
+  if (panel !== null) return panel.getBoundingClientRect()
   return spot.getBoundingClientRect()
 }
 
@@ -99,6 +110,24 @@ function paddingBox(el: HTMLElement): { width: number; height: number } {
  * stats band; for the other panes it is the pane's own box.
  */
 export function glassLocalRect(spot: HTMLElement): { left: number; top: number; width: number; height: number } {
+  // A fullscreen panel hangs leftward out of the card, so its own box is the
+  // glass: the card's padding box would clip the glow to the column track.
+  // `position: absolute` resolves it against the card, and the card declares
+  // `overflow: visible` for the fullscreen case, so the overlay may extend past
+  // it. Width/height come from the laid-out box. The card keeps `position:
+  // relative`, so its padding box is the origin.
+  const panel = spot.querySelector<HTMLElement>(FULLSCREEN_PANEL)
+  if (panel !== null) {
+    const card = paddingBox(spot)
+    const box = panel.getBoundingClientRect()
+    const own = spot.getBoundingClientRect()
+    return {
+      left: box.left - own.left,
+      top: box.top - own.top,
+      width: Math.max(box.width, card.width),
+      height: Math.max(box.height, card.height),
+    }
+  }
   const card = spot.querySelector<HTMLElement>('[data-composer-card]')
   if (card === null) {
     const box = paddingBox(spot)

@@ -80,14 +80,31 @@ describe('the workbench panel in fullscreen', () => {
     expect(bodies).toMatch(/display:\s*none/)
   })
 
-  it('gives the panel an opaque ground, not a wash', () => {
-    // A fullscreen page covers the frame: header, composer and transcript sit
-    // underneath it. A translucent fill let all of that read straight through a
-    // settings form. It is also viewport-wide, so there is no edge for a blur to
-    // sample — glass here only costs legibility.
+  it('sorts above the conversation instead of hiding behind it', () => {
+    // The host ranks this presentation with `--dsh-dockkit-dock-layer: 40` on
+    // the docked cell inside the panel. `isolation: isolate` on the panel trapped
+    // that number inside it and left the panel at z-index auto, under the
+    // composer's 8 — the conversation painted straight over the page. The panel
+    // takes the rank itself, and must not open a stacking context of its own.
     const bodies = all.filter(rule => PANEL(rule.selector)).map(rule => rule.body).join(' ')
-    expect(bodies).toMatch(/background:\s*#[0-9a-f]{6}/i)
-    expect(bodies).not.toMatch(/background:\s*color-mix\(/)
+    expect(bodies).toMatch(/z-index:\s*40/)
+    expect(bodies).not.toMatch(/isolation:\s*isolate/)
+  })
+
+  it('keeps the glass on the panel rather than an opaque plate', () => {
+    // Hiding the overlap with an opaque fill was the wrong layer: with the order
+    // right, the conversation sits behind a blur, not legible through it.
+    const bodies = all.filter(rule => PANEL(rule.selector)).map(rule => rule.body).join(' ')
+    expect(bodies).toMatch(/var\(--dsh-aqua-glass-card-light\)/)
+    expect(bodies).toMatch(/backdrop-filter:\s*blur\(/)
+    expect(bodies).not.toMatch(/background:\s*#[0-9a-f]{6}/i)
+  })
+
+  it('does not take over the host’s geometry', () => {
+    // The host owns `absolute; top: 0; right: 0; bottom: 0`; a `position` from
+    // this sheet would drop the panel into the column's flow.
+    const bodies = all.filter(rule => PANEL(rule.selector)).map(rule => rule.body).join(' ')
+    expect(bodies).not.toMatch(/position:\s*(relative|absolute|fixed)/)
   })
 
   it('cuts the page contents from that ground', () => {
@@ -101,11 +118,6 @@ describe('the workbench panel in fullscreen', () => {
       .join(' ')
     expect(bodies).toMatch(/--dsw-alias-bg-base:\s*transparent/)
     expect(bodies).toMatch(/--dsw-alias-bg-layer-1:\s*color-mix\(/)
-  })
-
-  it('keeps the panel’s own stacking context for that layer', () => {
-    const bodies = all.filter(rule => PANEL(rule.selector)).map(rule => rule.body).join(' ')
-    expect(bodies).toMatch(/isolation:\s*isolate/)
   })
 
   it('leaves the docked panel untouched', () => {

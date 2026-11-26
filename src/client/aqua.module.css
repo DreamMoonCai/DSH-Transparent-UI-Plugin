@@ -162,22 +162,32 @@
   display: none;
 }
 
-/* The fullscreen panel is a READING surface, not a floating plate, so it takes an
-   opaque ground instead of the card's 42% wash.
+/* The fullscreen panel takes the card material itself.
 
-   A fullscreen page covers the frame: the conversation header, the composer and
-   the transcript all sit underneath it. With a translucent fill they showed
-   straight through the page — a settings form whose rows and text fields were
-   legible on top of someone else's chat. The panel is also as wide as the
-   viewport, so there is no edge for a blur to sample and nothing for the water
-   to say through it: glass here only costs legibility.
+   It looked like glass failed here, and it did not: the panel was sorted under
+   the conversation, so the transcript painted over it. Two earlier attempts read
+   that as "a translucent page lets the conversation through" and switched the
+   fill to an opaque tint — which hid the wrong layer instead of fixing the
+   order. With the order right, a translucent fill plus a blur gives back a
+   frosted sheet: the conversation underneath is behind a 14px blur, not legible
+   through it.
 
-   The value sits one step deeper than the canvas, so the page reads as a sheet
-   laid on the water rather than as a hole in it. `isolation` keeps the z-index
-   -1 layers inside the panel instead of behind the page. */
+   No `::before` for this one. The panel already establishes a containing block
+   (the host makes it `position: absolute`), it is as large as the frame, and it
+   is the bottom layer of its own subtree, so the blur can live on the element
+   with nothing to paint behind it.
+
+   `position` stays the host's. It owns the panel's geometry
+   (`absolute; top: 0; right: 0; bottom: 0`); a `relative` from this sheet would
+   drop it back into the column's flow. */
 [data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
-  isolation: isolate;
-  background: #eaf1f9;
+  z-index: 40;
+  background: var(--dsh-aqua-glass-card-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px)) saturate(1.15);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
+  background: var(--dsh-aqua-glass-card-dark);
 }
 
 /* Everything inside the page that reaches for the canvas or a surface layer gets
@@ -193,7 +203,7 @@
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
-  background: #0b1420;
+  background: var(--dsh-aqua-glass-card-dark);
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-pane-body],
@@ -1793,22 +1803,41 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    `--dsh-hover-preview-fade` is set on every card element it renders, whatever
    the variant, and no hash or module rename can take it away. A class substring
    would not work here — the local name is just `card`, which matches half the
-   page. ---------- */
+   page.
+
+   The fill is dense on purpose. This card appears over whatever the pointer
+   happens to rest on — a session row, a message, a diff — and a light wash let
+   the text underneath read straight through it, which is worse than the opaque
+   chip the host ships. It keeps a hairline, a shadow and a radius so it still
+   reads as a raised surface, and the density is high enough that the content
+   behind it stops being legible. ---------- */
 [data-dsh-float] [style*='--dsh-hover-preview-fade'] {
-  border: 1px solid rgba(19, 45, 83, 0.16);
-  background: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
+  border: 1px solid rgba(19, 45, 83, 0.14);
+  background: color-mix(in srgb, rgb(248 251 255) calc(94% * var(--dsh-aqua-frost, 1)), transparent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.52),
-    0 14px 38px rgba(19, 45, 83, 0.16);
-  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.3)) saturate(1.15);
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 14px 38px rgba(19, 45, 83, 0.18);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.8)) saturate(1.1);
+  /* The primitive's copy is written for a near-black plate: its three label
+     tokens resolve to bluish-00 / -300 / -400, i.e. white and two pale greys.
+     On the light fill above that would be white on white, which is exactly what
+     a session tooltip looked like — almost no text at all. The card re-points
+     them to the skin's ink in its own scope. */
+  --dsw-alias-hovercard-bg: transparent;
+  --dsw-alias-hovercard-label-primary: var(--dsw-alias-label-primary);
+  --dsw-alias-hovercard-label-secondary: var(--dsw-alias-label-secondary);
+  --dsw-alias-hovercard-label-tertiary: var(--dsw-alias-label-tertiary);
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [style*='--dsh-hover-preview-fade'] {
-  border-color: rgba(148, 180, 220, 0.18);
-  background: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.2);
+  background: color-mix(in srgb, rgb(16 26 39) calc(94% * var(--dsh-aqua-frost, 1)), transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 14px 38px rgba(2, 6, 14, 0.48);
+    0 14px 38px rgba(2, 6, 14, 0.52);
+  --dsw-alias-hovercard-label-primary: var(--dsw-alias-label-primary);
+  --dsw-alias-hovercard-label-secondary: var(--dsw-alias-label-secondary);
+  --dsw-alias-hovercard-label-tertiary: var(--dsw-alias-label-tertiary);
 }
 
 /* ---------- The diff preview that opens over the transcript.

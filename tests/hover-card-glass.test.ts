@@ -121,6 +121,27 @@ describe('the generic hover card', () => {
 
   it('has a dark scheme', () => {
     const bodies = all.filter(rule => GENERIC_DARK(rule.selector)).map(rule => rule.body).join(' ')
-    expect(bodies).toMatch(/rgb\(226 236 250\)/)
+    expect(bodies).toMatch(/rgb\(16 26 39\)/)
+    expect(bodies).toMatch(/background:\s*color-mix\(/)
+  })
+
+  it('keeps its own copy readable on the light fill', () => {
+    // The primitive writes `--dsw-alias-hovercard-label-*` for a near-black
+    // plate — bluish-00 / -300 / -400, i.e. white and two pale greys. On a light
+    // fill that is white on white, which is what a session tooltip looked like.
+    const bodies = all.filter(rule => GENERIC(rule.selector)).map(rule => rule.body).join(' ')
+    for (const level of ['primary', 'secondary', 'tertiary']) {
+      expect(bodies).toContain(`--dsw-alias-hovercard-label-${level}: var(--dsw-alias-label-${level})`)
+    }
+  })
+
+  it('is dense enough to stop the content behind it', () => {
+    // This card lands on top of whatever the pointer rests on; a light wash let
+    // the text underneath read through it.
+    const bodies = all.filter(rule => GENERIC(rule.selector)).map(rule => rule.body).join(' ')
+    const at = bodies.indexOf('background: color-mix(')
+    const decl = bodies.slice(at, bodies.indexOf(';', at))
+    const pct = Number(/calc\((\d+)%/.exec(decl)?.[1])
+    expect(pct).toBeGreaterThanOrEqual(90)
   })
 })

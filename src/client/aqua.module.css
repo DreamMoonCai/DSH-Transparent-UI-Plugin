@@ -1589,6 +1589,94 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 /* The row's own expanded and hover states paint `--dsw-alias-interactive-bg-hover`,
    an ink wash. It still reads on a translucent fill, so it is left to the host. */
 
+/* ---------- The guide tab: the "start page" inside the right column.
+
+   Its six capsules are painted `background: var(--dsw-alias-bg-layer-1)`,
+   which in float mode resolves to an opaque `#FFFFFF` — six white cards stacked
+   on a glass pane. They are the second level under the pane, so they take the
+   secondary-glass recipe: a translucent fill, the top highline and hairline the
+   forge rows use, and a lift under the pointer.
+
+   The compass above them reads `--dsw-specific-guide-hero`, which the host
+   points at `--dsw-static-neutral-200` (`rgb(229, 229, 229)`) — a watermark
+   meant to sit at 56px on a solid sheet, invisible on a pale glass pane. It
+   takes the pane's primary ink at low opacity instead, so the mark reads as
+   engraved glass rather than disappearing.
+
+   Both seams are the host's own: `data-sidebar-right-guide` on the column and
+   `data-sidebar-right-guide-entry` on each capsule. The capsules are not one
+   shape: the shipped guide's entry IS the `button`, the terminal's entry is a
+   `div` wrapping an absolutely positioned ghost button, and the "more tools"
+   entry is a `button` with no entry attribute at all (it is a menu anchor). A
+   descendant `:is()` covers all three without depending on how deep the menu
+   wrapper puts its anchor, and a second rule clears the ghost button inside a
+   capsule: that button paints its own layer-1 fill over the parent, so one
+   capsule came out white while the rest were glass. The ghost rule outranks the
+   capsule rule by one compound, so it always wins. ---------- */
+[data-dsh-float] [data-sidebar-right-guide] :is(button, [data-sidebar-right-guide-entry]) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(19, 45, 83, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.6));
+  transition:
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    scale 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The capsule's own hit area: it spans the capsule and would paint a second
+   fill on top of the glass. It keeps the pointer target, loses the paint. */
+[data-dsh-float] [data-sidebar-right-guide] [data-sidebar-right-guide-entry] button {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+@media (hover: hover) {
+  [data-dsh-float] [data-sidebar-right-guide] :is(button, [data-sidebar-right-guide-entry]):hover {
+    background: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+    border-color: rgba(19, 45, 83, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.62),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 2px 10px rgba(19, 45, 83, 0.1);
+    scale: 1.005;
+  }
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-sidebar-right-guide] :is(button, [data-sidebar-right-guide-entry]) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(10% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+@media (hover: hover) {
+  [data-dsh-float] body[data-ds-dark-theme] [data-sidebar-right-guide] :is(button, [data-sidebar-right-guide-entry]):hover {
+    background: color-mix(in srgb, rgb(226 236 250) calc(15% * var(--dsh-aqua-frost, 1)), transparent);
+    border-color: rgba(148, 180, 220, 0.26);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 2px 10px rgba(2, 6, 14, 0.36);
+  }
+}
+
+/* The compass: the pane's own ink at a watermark alpha, so it stays a mark
+   rather than a control while still reading against the glass. */
+[data-dsh-float] [data-sidebar-right-guide] > span[aria-hidden='true'] {
+  color: color-mix(in srgb, var(--dsw-alias-label-primary) 16%, transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-sidebar-right-guide] > span[aria-hidden='true'] {
+  color: color-mix(in srgb, var(--dsw-alias-label-primary) 22%, transparent);
+}
+
 /* ---------- Segmented tabs: the shared control, in one place.
 
    The host renders two of them from `src/SegmentedTabs` and

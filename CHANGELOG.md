@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Turn the guide tab — the start page inside the right column — into glass. Its capsules are painted `background: var(--dsw-alias-bg-layer-1)`, which in float mode is an opaque `#FFFFFF`, so six white cards were stacked on a glass pane; they now take the secondary-glass recipe (translucent fill, top highline, hairline, a lift under the pointer). Its compass reads `--dsw-specific-guide-hero`, which the host points at `--dsw-static-neutral-200` — a watermark tuned for a solid sheet, invisible on pale glass; it now draws on the pane's own ink at a watermark alpha.
 - Make the pinned header inside an expanded "think" row a pane of the glass. The host keeps the collapse toggle reachable while the reasoning body scrolls, so it pins the disclosure header and paints it with `background: var(--dsw-alias-bg-base)` — the canvas colour, which this skin resolves to an opaque `#F4F8FD`. Over a pane that landed as a paper strip with the card's rounded edge cut across it. The band now takes the card material at twice the blur, so reasoning text sliding underneath stops being legible.
 
 ## v1.6.1

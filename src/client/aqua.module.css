@@ -117,6 +117,7 @@
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+  transition: opacity var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] {
@@ -190,8 +191,13 @@
   background: transparent;
 }
 
+/* The card's own pane of glass goes away on the same clock as the page's, for
+   the same reason: `display: none` blinked it out a frame after the attribute
+   flipped, while the panel was still sliding. Fading leaves the two surfaces
+   trading places instead of one vanishing before the other arrived. */
 [data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open])::before {
-  display: none;
+  opacity: 0;
+  transition: opacity var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 /* The sidebar card under a fullscreen page has nothing left to be.
@@ -200,15 +206,25 @@
    showing through wherever the page does not paint — which is why collapsing
    the sidebar looked like the card stayed while its contents left. Nothing of
    the frame is meant to be visible in this presentation, so the card drops its
-   fill and its ring for as long as the panel is out. The stock collapse still
-   owns the column's width, so closing fullscreen restores everything as it was. */
+   fill and its ring for as long as the panel is out.
+
+   Both drop on the panel's clock rather than on the attribute's frame: the
+   attribute flips at once, the panel slides over `--ds-transition-duration-slow`.
+   Switching the ring and the fill off instantly left the column bare for that
+   third of a second, which read as the glass leaving before the page arrived.
+   They fade instead, and the sidebar's own card is untouched outside this
+   presentation, so closing fullscreen restores it exactly as it was. */
 [data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]) [class*='sidebarCol'] {
   border-color: transparent;
   box-shadow: none;
+  transition:
+    border-color var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 [data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]) [class*='sidebarCol']::before {
-  display: none;
+  opacity: 0;
+  transition: opacity var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 /* The fullscreen panel takes the card material itself.
@@ -221,32 +237,69 @@
    frosted sheet: the conversation underneath is behind a 14px blur, not legible
    through it.
 
-   No `::before` for this one. The panel already establishes a containing block
-   (the host makes it `position: absolute`), it is as large as the frame, and it
-   is the bottom layer of its own subtree, so the blur can live on the element
-   with nothing to paint behind it.
+   The fill lives on `::before`, not on the panel, for one reason: it has to move
+   on the host's clock. The host slides the docked cells in and out with
+   `transform: translateX(...)` over `--ds-transition-duration-slow` (0.3s,
+   `--ds-ease-in-out`), while `data-sidebar-right-open` flips in a single frame.
+   A fill keyed straight off that attribute therefore appeared before the content
+   and vanished before it left — the mask and the page ran on different clocks.
+   An opacity on a pseudo-element can be interpolated, so it fades across exactly
+   the same 0.3s with exactly the same easing, and `opacity` is composited, so the
+   blur does not have to be repainted every frame.
 
    `position` stays the host's. It owns the panel's geometry
    (`absolute; top: 0; right: 0; bottom: 0`); a `relative` from this sheet would
-   drop it back into the column's flow. */
+   drop it back into the column's flow. `z-index: 40` on the panel does give it a
+   stacking context, which is what keeps the pseudo-element's own `z-index: -1`
+   inside the panel instead of under the page. */
 [data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] {
   z-index: 40;
+}
+
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
   background: var(--dsh-aqua-glass-card-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px)) saturate(1.15);
+  opacity: 0;
+  transition: opacity var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]::before {
+  opacity: 1;
+}
+
+/* A panel that mounts already open has nothing to interpolate from, so it would
+   come in on a single frame while the content slides. The host seeds its own
+   slide with `@starting-style`; the fill starts from the same place. */
+@starting-style {
+  [data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]::before {
+    opacity: 0;
+  }
 }
 
 /* On Windows the host does not let this page reach the sidebar: it keeps
    `max-width: calc(100vw - var(--dsh-windows-sidebar-width))` so the caption
    controls stay clickable, and it rounds the first docked pane's top-left
-   corner with `--dsh-windows-content-radius`. The fill above is painted on the
-   PANEL — a plain rectangle — so it squared off that corner and left a wedge of
-   glass outside it, which is the notch in the screenshots. The panel takes the
-   same corner so its own paint follows the pane's. */
+   corner with `--dsh-windows-content-radius`. The fill above is painted on a
+   plain rectangle — the panel — so it squared off that corner and left a wedge
+   of glass outside it, which is the notch in the screenshots. Both the panel and
+   its fill take the same corner so the paint follows the pane's. */
 [data-dsh-float][data-windows-titlebar] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] {
   border-top-left-radius: var(--dsh-windows-content-radius, 16px);
   corner-shape: round;
 }
-[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] {
+
+[data-dsh-float][data-windows-titlebar] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
+  border-top-left-radius: var(--dsh-windows-content-radius, 16px);
+  corner-shape: round;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
   background: var(--dsh-aqua-glass-card-dark);
 }
 
@@ -1080,6 +1133,12 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   box-shadow: 0 10px 34px rgba(19, 45, 83, 0.16);
   backdrop-filter: none;
   overflow: hidden;
+  /* The ring and the fill step out of the way when a fullscreen page mounts on
+     this column. They fade rather than blink, so the drop follows the page's own
+     slide instead of landing a frame early. */
+  transition:
+    border-color var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1)),
+    box-shadow var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 [data-dsh-float] [class*='sidebarCol']::before {
@@ -1091,6 +1150,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: var(--dsh-aqua-glass-card-light);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+  transition: opacity var(--ds-transition-duration-slow, 0.3s) var(--ds-ease-in-out, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [class*='sidebarCol'] {

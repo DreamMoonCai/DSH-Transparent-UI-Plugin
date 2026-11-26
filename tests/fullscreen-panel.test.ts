@@ -51,20 +51,43 @@ const PANEL = (selector: string) =>
   !selector.includes(':has(') &&
   !selector.includes('::before')
 
+/** Rules on the fill the fullscreen panel paints behind its content. */
+const FILL = (selector: string) =>
+  selector.includes("[data-sidebar-right-panel='fullscreen']") &&
+  selector.includes('::before') &&
+  !selector.includes(':has(')
+
 describe('the workbench panel in fullscreen', () => {
   it('only applies while the panel is actually presented', () => {
     // A fullscreen panel that has been collapsed stays mounted — the host hides
     // its docked cells and slides them out, but the panel box itself remains at
-    // `100vw`. Ungated, the glass stayed painted after closing and left a
-    // full-viewport frosted sheet over the page.
+    // `100vw`. So the surface rules must not depend on the panel's mere presence.
+    // The one exception is the fill's resting state: `::before` carries its own
+    // `opacity: 0` so the fade has somewhere to come from and somewhere to go.
     const touched = all
       .filter(rule => rule.selector.includes("[data-sidebar-right-panel='fullscreen']"))
       .filter(rule => rule.selector.includes('[data-dsh-float]'))
+      .filter(rule => !FILL(rule.selector))
       .map(rule => rule.selector)
     expect(touched.length).toBeGreaterThan(0)
     for (const selector of touched) {
       expect(selector, selector).toContain('[data-sidebar-right-open]')
     }
+  })
+
+  it('fades the fill on the clock the host slides its content', () => {
+    // The host slides the docked cells over `--ds-transition-duration-slow`
+    // (0.3s, `--ds-ease-in-out`), but `data-sidebar-right-open` flips in a single
+    // frame. A fill keyed straight off that attribute appeared before the content
+    // and vanished before it left — the mask and the page ran on different clocks.
+    const resting = all.filter(rule => FILL(rule.selector) && !rule.selector.includes('[data-sidebar-right-open]')).map(rule => rule.body).join(' ')
+    const shown = all.filter(rule => FILL(rule.selector) && rule.selector.includes('[data-sidebar-right-open]')).map(rule => rule.body).join(' ')
+    expect(resting).toMatch(/opacity:\s*0/)
+    expect(shown).toMatch(/opacity:\s*1/)
+    expect(resting).toMatch(/transition:[\s\S]*opacity[\s\S]*var\(--ds-transition-duration-slow/)
+    expect(resting).toMatch(/var\(--ds-ease-in-out/)
+    // `display` cannot be interpolated; the fill has to stay in the paint.
+    expect(resting).not.toMatch(/display:\s*none/)
   })
   it('lets the panel out of the card', () => {
     // The host grows the panel to `calc(100vw + 1px)` and relies on its own
@@ -106,12 +129,17 @@ describe('the workbench panel in fullscreen', () => {
     expect(bodies).toMatch(/corner-shape:\s*round/)
   })
 
-  it('hides its own glass while the panel is out', () => {
+  it('takes the card glass away on the same clock', () => {
+    // The card's own pane used to go away with `display: none`, which blinked it
+    // out a frame after the attribute flipped while the panel was still sliding.
+    // It fades instead, on the host's clock.
     const bodies = all
       .filter(rule => rule.selector.includes(':has([data-sidebar-right-panel=\'fullscreen\'') && rule.selector.includes('::before'))
       .map(rule => rule.body)
       .join(' ')
-    expect(bodies).toMatch(/display:\s*none/)
+    expect(bodies).toMatch(/opacity:\s*0/)
+    expect(bodies).toMatch(/transition:[\s\S]*opacity/)
+    expect(bodies).not.toMatch(/display:\s*none/)
   })
 
   it('sorts above the conversation instead of hiding behind it', () => {
@@ -127,8 +155,9 @@ describe('the workbench panel in fullscreen', () => {
 
   it('keeps the glass on the panel rather than an opaque plate', () => {
     // Hiding the overlap with an opaque fill was the wrong layer: with the order
-    // right, the conversation sits behind a blur, not legible through it.
-    const bodies = all.filter(rule => PANEL(rule.selector)).map(rule => rule.body).join(' ')
+    // right, the conversation sits behind a blur, not legible through it. The
+    // fill lives on `::before` so it can fade, but it is still the panel's glass.
+    const bodies = all.filter(rule => FILL(rule.selector)).map(rule => rule.body).join(' ')
     expect(bodies).toMatch(/var\(--dsh-aqua-glass-card-light\)/)
     expect(bodies).toMatch(/backdrop-filter:\s*blur\(/)
     expect(bodies).not.toMatch(/background:\s*#[0-9a-f]{6}/i)

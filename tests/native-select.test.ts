@@ -209,7 +209,11 @@ describe('the picker carries the same press as the panes', () => {
 
   it('rises from a smaller scale when it opens', () => {
     expect(aquaCss).toContain('@starting-style')
-    const starting = rules.find(rule => rule.guards.some(guard => guard.startsWith('@starting-style')))
+    // Other surfaces seed their own first frame in `@starting-style` too, so the
+    // one under test has to be the picker's, not merely the first one emitted.
+    const starting = rules.find(
+      rule => rule.guards.some(guard => guard.startsWith('@starting-style')) && rule.selector.includes('::picker(select)'),
+    )
     expect(starting).toBeDefined()
     expect(starting!.body).toMatch(/scale:\s*0\.96/)
   })

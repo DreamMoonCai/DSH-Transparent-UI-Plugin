@@ -1138,6 +1138,28 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: var(--dsh-aqua-glass-sticky-dark);
 }
 
+/* ---------- Reasoning disclosure: the pinned header inside an expanded
+   "think" row.
+
+   The host keeps the collapse toggle reachable while the reasoning body
+   scrolls, so it pins the disclosure header and paints it with
+   `background: var(--dsw-alias-bg-base)` — the canvas colour, which this
+   theme sets to an opaque `#F4F8FD`. Over a pane that lands as a paper strip
+   with the card's rounded edge cut across it.
+
+   It takes the card material instead, at twice the blur. The blur is what
+   makes a pinned band work: reasoning text slides underneath it, and at the
+   card's own 14px the glyphs ghost through and read as broken translucency
+   rather than glass. ---------- */
+[data-dsh-float] [data-variant='think'][data-expanded] [data-open] [data-disclosure-header] {
+  background: var(--dsh-aqua-glass-card-light);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 2));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-variant='think'][data-expanded] [data-open] [data-disclosure-header] {
+  background: var(--dsh-aqua-glass-card-dark);
+}
+
 /* ---------- Stats line: the composer card's docked footer (original
    styling). It shares the card's glass blur/width/border; the distinction
    is a hairline divider at the seam plus a slightly more transparent

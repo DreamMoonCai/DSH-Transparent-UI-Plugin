@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Make the pinned header inside an expanded "think" row a pane of the glass. The host keeps the collapse toggle reachable while the reasoning body scrolls, so it pins the disclosure header and paints it with `background: var(--dsw-alias-bg-base)` — the canvas colour, which this skin resolves to an opaque `#F4F8FD`. Over a pane that landed as a paper strip with the card's rounded edge cut across it. The band now takes the card material at twice the blur, so reasoning text sliding underneath stops being legible.
+
 ## v1.6.1
 
 - Let the environment card's glass reach its own right edge. The host reserves a lane for its scrollbar with `border-right: 2px solid transparent` and `padding-right: calc(8px - 2px - scrollbar-width)` under `scrollbar-gutter: stable`; an `inset` ring is painted against the padding box, so that transparent border left a bare column down the right side. The border is gone and the same 2px sits in the padding now, so the ring lands where the eye expects and the scrollbar keeps its lane.

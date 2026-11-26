@@ -162,25 +162,46 @@
   display: none;
 }
 
-/* With the card out of the way the panel has nothing under it but the fluid, so
-   the panel takes the glass itself — one sheet across the whole viewport, which
-   is what a fullscreen presentation is. `isolation` keeps the z-index -1 layer
-   inside the panel instead of behind the page. */
+/* The fullscreen panel is a READING surface, not a floating plate, so it takes an
+   opaque ground instead of the card's 42% wash.
+
+   A fullscreen page covers the frame: the conversation header, the composer and
+   the transcript all sit underneath it. With a translucent fill they showed
+   straight through the page — a settings form whose rows and text fields were
+   legible on top of someone else's chat. The panel is also as wide as the
+   viewport, so there is no edge for a blur to sample and nothing for the water
+   to say through it: glass here only costs legibility.
+
+   The value sits one step deeper than the canvas, so the page reads as a sheet
+   laid on the water rather than as a hole in it. `isolation` keeps the z-index
+   -1 layers inside the panel instead of behind the page. */
 [data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
   isolation: isolate;
+  background: #eaf1f9;
 }
 
-[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--dsh-aqua-glass-card-light);
-  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+/* Everything inside the page that reaches for the canvas or a surface layer gets
+   the translucent family, so rows and fields are cut from the page rather than
+   stacked on it as opaque plates. */
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-pane-body],
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-host='dock'] > section {
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(255 255 255) calc(26% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
-[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
-  background: var(--dsh-aqua-glass-card-dark);
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
+  background: #0b1420;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-pane-body],
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-host='dock'] > section {
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(13% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 /* The pane surfaces carry the host's opaque base fill, which would sit on top

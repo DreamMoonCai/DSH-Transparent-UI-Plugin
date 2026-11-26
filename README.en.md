@@ -35,7 +35,7 @@ This repository forks [realhenrylan/DSH-Transparent-UI-Plugin](https://github.co
 | **Inside panels** | Settings rows, in-sheet cards, the plugin manager, scheduled tasks, the edited-files card, the shared segmented tabs and the change-request card all re-point their surfaces to translucent tokens in their own scope. |
 | **Scrollbars** | Neutral ink instead of the brand blue, a specular sweep down the thumb, and a groove that only appears under the pointer. The lane stays the host's 5px because other surfaces derive their padding from it. |
 | **Cards in the transcript** | The diff / read / terminal blocks a tool call expands, and the comparison preview that opens over a file row, all take the secondary glass; the red/green row tints stay at low density. |
-| **Fullscreen panel** | Hitting fullscreen in the right workbench makes the card step aside: no clip, no margin, no own stacking context, so the panel covers the viewport the way the host designed. |
+| **Fullscreen panel** | Hitting fullscreen in the right workbench makes the card step aside: no clip, no margin, no own stacking context, so the panel covers the viewport the way the host designed — and it takes an opaque ground, because a fullscreen page covers the whole frame and a translucent fill let the header and composer read through it. |
 | **Contrast fixes** | White-on-white tooltips, a switch thumb invisible in dark mode, a code block banner sliding under the header, and the 5px column jump caused by the press growing a horizontal scrollbar. |
 | **Tests** | 7 files / 52 checks → 30 files / 284 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
 

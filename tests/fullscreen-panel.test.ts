@@ -80,14 +80,27 @@ describe('the workbench panel in fullscreen', () => {
     expect(bodies).toMatch(/display:\s*none/)
   })
 
-  it('gives the panel its own sheet instead', () => {
-    // With the card gone the panel has nothing under it but the fluid.
+  it('gives the panel an opaque ground, not a wash', () => {
+    // A fullscreen page covers the frame: header, composer and transcript sit
+    // underneath it. A translucent fill let all of that read straight through a
+    // settings form. It is also viewport-wide, so there is no edge for a blur to
+    // sample — glass here only costs legibility.
+    const bodies = all.filter(rule => PANEL(rule.selector)).map(rule => rule.body).join(' ')
+    expect(bodies).toMatch(/background:\s*#[0-9a-f]{6}/i)
+    expect(bodies).not.toMatch(/background:\s*color-mix\(/)
+  })
+
+  it('cuts the page contents from that ground', () => {
+    // Rows and fields inside the page reach for the canvas or a surface layer;
+    // left opaque they stack as plates on the page.
     const bodies = all
-      .filter(rule => rule.selector.includes("[data-sidebar-right-panel='fullscreen']") && rule.selector.includes('::before') && !rule.selector.includes(':has('))
+      .filter(rule =>
+        rule.selector.includes("[data-sidebar-right-panel='fullscreen']") &&
+        (rule.selector.includes('[data-dockkit-pane-body]') || rule.selector.includes("[data-dockkit-host='dock']")))
       .map(rule => rule.body)
       .join(' ')
-    expect(bodies).toMatch(/var\(--dsh-aqua-glass-card-light\)/)
-    expect(bodies).toMatch(/backdrop-filter:\s*blur\(/)
+    expect(bodies).toMatch(/--dsw-alias-bg-base:\s*transparent/)
+    expect(bodies).toMatch(/--dsw-alias-bg-layer-1:\s*color-mix\(/)
   })
 
   it('keeps the panel’s own stacking context for that layer', () => {

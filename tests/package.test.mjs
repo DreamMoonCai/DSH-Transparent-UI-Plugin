@@ -69,12 +69,15 @@ const satisfies = version => {
 }
 
 test('the package declares a DSH engine range consistent with the install flow', () => {
-  // Anchor versions: the installed-and-verified release, the first release that
-  // follows it, and the boundaries just outside the range.
-  assert.equal(manifest.engines?.dsh, '>=0.2.2-rc.1 <0.3.0-0')
-  assert.equal(satisfies('0.2.2-rc.1'), true, 'the verified DSH release must satisfy the range')
-  assert.equal(satisfies('0.2.2'), true, 'the stable release must satisfy the range')
-  assert.equal(satisfies('0.2.2-rc.0'), false, 'older prereleases must not satisfy the range')
+  // Anchor versions: the installed-and-verified release, the prerelease just
+  // below it, the stable release it will become, and the upper boundary.
+  assert.equal(manifest.engines?.dsh, '>=0.2.3-alpha.2 <0.3.0-0')
+  assert.equal(satisfies('0.2.3-alpha.2'), true, 'the verified DSH release must satisfy the range')
+  assert.equal(satisfies('0.2.3-alpha.3'), true, 'later 0.2.3 prereleases must satisfy the range')
+  assert.equal(satisfies('0.2.3'), true, 'the stable release must satisfy the range')
+  assert.equal(satisfies('0.2.3-alpha.1'), false, 'earlier 0.2.3 prereleases must not satisfy the range')
+  assert.equal(satisfies('0.2.2'), false, 'the previous release must not satisfy the range')
+  assert.equal(satisfies('0.2.2-rc.1'), false, 'the previously verified release must not satisfy it either')
   assert.equal(satisfies('0.2.1'), false, 'releases before the settings redesign must not satisfy the range')
   assert.equal(satisfies('0.3.0-rc.1'), false, '0.3.0 prereleases must not satisfy the range')
   assert.equal(satisfies('0.3.0'), false, '0.3.0 stable must not satisfy the range')

@@ -1,6 +1,6 @@
 {
   "name": "dsh-driftglass",
-  "description": "Deep-sea glass theme for DSH 0.2.2-rc.1 desktop and web",
+  "description": "Deep-sea glass theme for DSH 0.2.3-alpha.2 desktop and web",
   "version": "1.6.1",
   "publishConfig": {
     "access": "public"
@@ -48,7 +48,7 @@
   },
   "license": "AGPL-3.0-only",
   "engines": {
-    "dsh": ">=0.2.2-rc.1 <0.3.0-0"
+    "dsh": ">=0.2.3-alpha.2 <0.3.0-0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.1.0"

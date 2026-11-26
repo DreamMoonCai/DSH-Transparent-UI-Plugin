@@ -79,6 +79,51 @@
   background: transparent;
 }
 
+/* ---------- The two variables a third-party pane reaches for.
+
+   DSH's own theme defines neither `--dsh-surface` nor `--dsh-accent`; a plugin
+   that wants to sit on the page's material writes
+   `background: var(--dsh-surface, #1e1e24)` and gets its own dark default
+   instead. That is why the Cursor pane comes up as a near-black rectangle in
+   light mode: nothing in this theme ever answered the question, so the plugin
+   fell back to a colour chosen for a dark app.
+
+   Defining them here costs nothing and is the whole point of a token layer — a
+   pane that asks to join the page now can. `--dsh-surface` is the card material
+   and `--dsh-accent` is the brand ink, both already used everywhere else. */
+[data-dsh-aqua] {
+  --dsh-surface: var(--dsh-aqua-glass-card-light);
+  --dsh-accent: var(--dsw-alias-brand-primary);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] {
+  --dsh-surface: var(--dsh-aqua-glass-card-dark);
+}
+
+/* ---------- Let the press paint outside the column it sits in.
+
+   The press is `perspective(800px) rotateX/Y(±1°) scale(1.01)`. The rotation
+   lifts one edge toward the viewer, and the projection magnifies that side by
+   `800 / (800 - z)`. On a card the width of the centre column the lifted half is
+   ~800px from the pivot, so z ≈ 14px and that half grows ~1.8% — 14px — before
+   the 1% scale adds another 8px. The card's side margin is 16px, so the lifted
+   edge runs ~6px past it.
+
+   `.centerCol` and `.frame` both clip with `overflow: hidden`, which cut exactly
+   that sliver off: pressing from the far right lifted the LEFT edge and the left
+   edge was the part that disappeared.
+
+   `overflow: clip` with `overflow-clip-margin` is the tool for this — it pushes
+   the paint boundary outward without turning the box into a scroll container, so
+   no scrollbar appears or disappears and nothing reflows. `clip` is also the
+   stricter of the two (a `hidden` box can still be scrolled programmatically),
+   so the columns lose nothing by the swap. ---------- */
+[data-dsh-aqua][data-dsh-float] [data-dsh-frame],
+[data-dsh-aqua][data-dsh-float] [data-dsh-frame] > [class*='centerCol'] {
+  overflow: clip;
+  overflow-clip-margin: 28px;
+}
+
 /* ---------- Right workbench column: the floating glass card that mirrors the
    sidebar. DSH renders the right panel (files / terminal / tools) into
    layout's `[data-rightbar-col]`; its tab host paints an opaque base fill, so
@@ -1256,6 +1301,67 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 [data-dsh-float] [data-dsh-trajectory] [role='toolbar'],
 [data-dsh-float] [data-dsh-trajectory] section[aria-label='Trajectory timeline'] {
   background: transparent;
+}
+
+/* ---------- The history timeline, the fourth main panel.
+
+   `@deepseek-ai/dsh-timeline` renders one `<div class="dsh-timeline">` into the
+   centre column and paints its own surfaces from `--dsw-alias-bg-base` — the
+   canvas colour, which this theme resolves to an opaque `#F4F8FD`. Its rules
+   carry the plain class name (it ships as a package stylesheet, not a CSS
+   module), so they are reachable from here with `:global()`.
+
+   Same treatment as the scheduled-tasks page: the root becomes the floating
+   card, and the surfaces that were painted against the canvas are re-pointed to
+   the glass tokens inside it. The progress bars, tick labels and block chips
+   read the same tokens, so one scope covers the whole board. The card keeps the
+   board's own `overflow: auto` — the timeline is taller than the column by
+   design and hiding the root would clip it. ---------- */
+[data-dsh-float] :global(.dsh-timeline) {
+  box-sizing: border-box;
+  margin: 8px 16px 12px;
+  height: calc(100% - 20px);
+  border: 1px solid rgba(19, 45, 83, 0.26);
+  border-radius: 20px;
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 10px 34px rgba(19, 45, 83, 0.16);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] :global(.dsh-timeline) {
+  --dsw-alias-bg-base: transparent;
+  --dsw-specific-sidebar-fill: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(46% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(32% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-timeline) {
+  border-color: rgba(148, 180, 220, 0.32);
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 8px 30px rgba(2, 6, 14, 0.32);
+  --dsw-specific-sidebar-fill: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(12% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* The board's own blocks and chips sit ON the card, so they keep a fill — one
+   step up from the card rather than the canvas. A block that is drawn in a
+   `color-mix(... 8%, bg-base)` ends up fully transparent once the base is
+   cleared, which is why the step is re-pointed rather than simply cleared. */
+[data-dsh-float] :global(.dsh-timeline) :global(.timeline-block) {
+  background: color-mix(in srgb, var(--timeline-level) 10%, transparent);
+}
+
+[data-dsh-float] :global(.dsh-timeline) :global(.timeline-block[data-source='no-activity']) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-timeline) :global(.timeline-block[data-source='no-activity']) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 /* ---------- Scheduled tasks: the second main panel. The stock page paints

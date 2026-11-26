@@ -35,6 +35,26 @@ export function spotElements(): HTMLElement[] {
 const FULLSCREEN_PANEL = '[data-sidebar-right-panel="fullscreen"]'
 
 /**
+ * Does the pane's own padding box equal its visible glass?
+ *
+ * True for every plain pane — the sidebar column, a main panel page, a card in
+ * the transcript. False for the two panes whose glass is NOT their own box: the
+ * fused composer+stats spot (an invisible wrapper around both) and a workbench
+ * card hosting a fullscreen panel.
+ *
+ * The controller needs this because it sizes the glow overlay inline. For a
+ * plain pane that inline box is a second, independent copy of a measurement the
+ * browser already has — and when it is taken at the wrong moment the overlay is
+ * left too small, so the radial fill ends on a straight edge partway across the
+ * pane. Those panes let the stylesheet's `inset: 0` own the box instead, which
+ * follows every layout change for free.
+ */
+export function glassIsOwnBox(spot: HTMLElement): boolean {
+  if (spot.querySelector('[data-composer-card]') !== null) return false
+  return spot.querySelector<HTMLElement>(FULLSCREEN_PANEL) === null
+}
+
+/**
  * The visible glass region of a pane (viewport rect). The fused
  * composer+stats spot is the wider invisible inputbar wrapper — its glass is
  * the union of the composer card and the docked stats band, so the wrapper's
@@ -157,6 +177,16 @@ export function ensureGlow(spot: HTMLElement): HTMLElement {
     glow.setAttribute(GLOW_ATTR, '')
     glow.setAttribute('aria-hidden', 'true')
     spot.appendChild(glow)
+  }
+  // A pane that IS its own glass never gets an inline box: `inset: 0` in the
+  // stylesheet follows the pane through every reflow, while a number measured
+  // once can go stale and strand the radially brightest part of the fill off the
+  // edge. A pane whose glass sits inside its own box still needs the numbers.
+  if (glassIsOwnBox(spot)) {
+    glow.style.removeProperty('left')
+    glow.style.removeProperty('top')
+    glow.style.removeProperty('width')
+    glow.style.removeProperty('height')
   }
   return glow
 }

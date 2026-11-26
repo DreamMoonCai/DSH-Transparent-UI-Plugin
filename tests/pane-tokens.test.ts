@@ -120,6 +120,7 @@ describe('a third-party pane inside the workbench card', () => {
       const scoped =
         selector.includes('[data-dsh-details]') ||
         selector.includes('md-code-block') ||
+        selector.includes('dsh-timeline') ||
         /\[data-(diff|read|terminal)\]/.test(selector)
       expect(scoped, `unscoped canvas clear: ${selector}`).toBe(true)
       expect(selector).toContain('[data-dsh-float]')

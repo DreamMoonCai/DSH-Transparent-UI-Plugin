@@ -35,7 +35,7 @@
  * of the toggles.
  */
 import {
-  closestSpot, ensureGlow, glassLocalRect, GLOW_ATTR, inside, ON_ATTR, replacedElement, spotElements,
+  closestSpot, ensureGlow, glassIsOwnBox, glassLocalRect, GLOW_ATTR, inside, ON_ATTR, replacedElement, spotElements,
   startOverlayKeeper, visualRect,
 } from './spot-core.ts'
 
@@ -314,7 +314,7 @@ export function startSpotlight(): () => void {
     // div inside it would never paint. The image viewer's picture is stamped
     // for its press; skip the overlay rather than append a dead node.
     const glow = glowGated() && !replacedElement(spot) ? ensureGlow(spot) : null
-    if (glow !== null) {
+    if (glow !== null && !glassIsOwnBox(spot)) {
       glow.style.left = `${local.left}px`
       glow.style.top = `${local.top}px`
       glow.style.width = `${local.width}px`

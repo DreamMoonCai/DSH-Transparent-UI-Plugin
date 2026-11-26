@@ -1776,12 +1776,57 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   color: rgb(228 236 248 / 0.92);
 }
 
+/* ---------- The queued-message dock.
+
+   While the agent is running, anything typed lands in a stack that sits directly
+   on top of the composer: `div[data-queue-dock]` holds `.F07MqG_panel`, whose
+   `::before` paints `background: var(--dsw-specific-menu)` and
+   `backdrop-filter: var(--dsw-menu-backdrop-filter)`. It reads as a separate
+   paper card floating over the pond for two reasons.
+
+   First, the fill. `--dsw-specific-menu` is the same 70% white the menu family
+   uses, tuned to sit over arbitrary page content; here it lands on the composer's
+   own glass, which is a much lighter backdrop, so the panel reads almost solid.
+   It takes the card material instead.
+
+   Second, the join. The host gives the panel `border-radius: var(--dsw-radius-lg)
+   (16px) 16px 0 0` because it sits on a stock composer card with a 16px corner.
+   The fused slab in this skin is 24px, so the stack's shoulders no longer line up
+   with the card under it and a sliver of the wrong shape shows at the seam.
+
+   The list rows are left alone: their own separators are hairlines already. */
+[data-dsh-float] [data-queue-dock] [class*='panel']::before {
+  background: var(--dsh-aqua-glass-card-light);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-queue-dock] [class*='panel']::before {
+  background: var(--dsh-aqua-glass-card-dark);
+}
+
+[data-dsh-float] [data-queue-dock] [class*='panel'] {
+  border-radius: 24px 24px 0 0;
+}
+
+[data-dsh-float] [data-queue-dock] [class*='panel']::after {
+  border-radius: inherit;
+}
+
+/* A queued row's file and image chips paint the canvas colour, which is opaque
+   white in float mode; they read as stickers on the dock. Same treatment as the
+   inline code chip: the card material, kept just bright enough to separate. */
+[data-dsh-float] [data-queue-dock] :is([class*='file'], [class*='thumb']) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(19, 45, 83, 0.14);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-queue-dock] :is([class*='file'], [class*='thumb']) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(12% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.18);
+}
 /* Composer placeholder: neutral, scheme-adaptive — no blue hint. */
 [data-dsh-float] [data-composer-card] textarea::placeholder {
   color: rgb(55 64 84 / 0.5);
-}
-
-[data-dsh-float] body[data-ds-dark-theme] [data-composer-card] textarea::placeholder {
+}[data-dsh-float] body[data-ds-dark-theme] [data-composer-card] textarea::placeholder {
   color: rgb(205 216 234 / 0.52);
 }
 
@@ -2284,7 +2329,12 @@ html[data-dsh-float][data-dsh-aqua] :not(pre) > code {
   background-color: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
   border-color: rgba(19, 45, 83, 0.14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
+  /* NO `backdrop-filter` here, deliberately. A chip is an inline element and it
+     wraps: `code` spanning two lines is two fragments, and Chromium puts the
+     element's own painted text into the blurred region for the fragment that
+     follows the break — half the sentence turned into a smear. Nothing needs the
+     blur anyway: the chip sits on a translucent plate over prose, so the fill and
+     the highline are the whole effect. */
 }
 
 html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {

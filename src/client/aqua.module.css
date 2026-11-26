@@ -129,6 +129,60 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
+/* ---------- The workbench panel in fullscreen.
+
+   The expand button widens the panel to `calc(100vw + 1px)` and grows it
+   leftward from the column's right edge. The host relies on the column not
+   clipping: its own rule is `.rightbarCol { position: relative; overflow:
+   visible }`, with a comment saying exactly that ("The right column never
+   clips").
+
+   This card does clip — it is a floating plate with rounded corners and an
+   inset — so the widened panel was cut back to the card. The tab's content had
+   already switched, but the only part on screen was the strip nearest the right
+   edge, which reads as "nothing happened". The card's `isolation: isolate` made
+   it worse: the panel's dock layer (40) was trapped inside the card's stacking
+   context instead of covering the frame.
+
+   While a fullscreen panel is mounted the card steps out of the way — no clip,
+   no margin, no own ink, no stacking context — so the panel covers the viewport
+   the way the host designed. The docked panel keeps every rule above; the
+   `:has()` guard is the same structural test the host uses to size the panel. ---------- */
+[data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen']) {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  isolation: auto;
+  background: transparent;
+}
+
+[data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen'])::before {
+  display: none;
+}
+
+/* With the card out of the way the panel has nothing under it but the fluid, so
+   the panel takes the glass itself — one sheet across the whole viewport, which
+   is what a fullscreen presentation is. `isolation` keeps the z-index -1 layer
+   inside the panel instead of behind the page. */
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
+  isolation: isolate;
+}
+
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--dsh-aqua-glass-card-light);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen']::before {
+  background: var(--dsh-aqua-glass-card-dark);
+}
+
 /* The pane surfaces carry the host's opaque base fill, which would sit on top
    of the card's glass. Keyed off the dockkit data attributes rather than the
    hashed class names: 0.2.3 renames its CSS modules (the class now reads
@@ -1640,6 +1694,71 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   border-radius: 16px 16px 0 0;
 }
 
+/* ---------- The chat's block cards: diff, read, terminal.
+
+   Every tool call that expands prints one of these. They are not
+   `md-code-block` — that is the markdown fence renderer — they are the shared
+   block primitive, and it paints itself the same way: `.card` fills
+   `--dsw-alias-markdown-code-block` (#F0F5FB light / #0D141F dark), `.header`
+   repeats it through `--dsl-code-block-background`, and the diff rows add
+   `--dsw-alias-code-diff-added` / `-deleted` (#e6f4e7 / #fce6e2 in light).
+
+   So a diff card in the transcript is a pale opaque slab with pastel rows, and
+   it never picked up the glass even though the code fences did: the fence rule
+   is keyed off `md-code-block`, which this component does not carry.
+
+   The hooks are the primitive's own `data-diff` / `data-read` / `data-terminal`
+   attributes on the card root. They are plain marker attributes, not hashed
+   classes, and they sit on the element that paints the fill. ---------- */
+[data-dsh-float] :is([data-diff], [data-read], [data-terminal]) {
+  --dsw-alias-markdown-code-block: transparent;
+  --dsw-alias-bg-base: transparent;
+  --dsl-code-block-background: transparent;
+  --dsw-alias-code-diff-added: color-mix(in srgb, rgb(1, 162, 65) calc(15% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-code-diff-deleted: color-mix(in srgb, rgb(186, 39, 35) calc(14% * var(--dsh-aqua-frost, 1)), transparent);
+  border: 1px solid rgba(19, 45, 83, 0.12);
+  border-radius: 16px;
+  background: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.6));
+  overflow: hidden;
+}
+
+/* The header strip is the block's own band; it inherits the fill through
+   `--dsl-code-block-background`, which the rule above already cleared. A
+   hairline separates it from the rows the way the fence banner does. */
+[data-dsh-float] :is([data-diff], [data-read], [data-terminal]) > :first-child {
+  border-bottom: 0.5px solid rgba(19, 45, 83, 0.1);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is([data-diff], [data-read], [data-terminal]) {
+  border-color: rgba(148, 180, 220, 0.16);
+  background: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --dsw-alias-code-diff-added: color-mix(in srgb, rgb(65, 201, 119) calc(17% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-code-diff-deleted: color-mix(in srgb, rgb(250, 66, 62) calc(17% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is([data-diff], [data-read], [data-terminal]) > :first-child {
+  border-bottom-color: rgba(148, 180, 220, 0.14);
+}
+
+/* The I/O card a failed tool prints under its diff is a second plate with the
+   same fill; it sits on the block above, so it is one step lighter. */
+[data-dsh-float] [data-tool] [class*='ioCard'] {
+  --dsw-alias-markdown-code-block: transparent;
+  border-color: rgba(19, 45, 83, 0.1);
+  background: color-mix(in srgb, rgb(255 255 255) calc(20% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-tool] [class*='ioCard'] {
+  border-color: rgba(148, 180, 220, 0.14);
+  background: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+}
 /* ---------- The generic hover card.
 
    The same primitive in its compact and media variants — the one that shows a
@@ -2126,115 +2245,6 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     order: 1;
     margin-inline-start: auto;
   }
-}
-
-/* ---------- Native checkboxes and radios.
-
-   Both are painted by the browser: on Windows a checked box is a solid
-   `#0078D4` square with a white tick, a radio a blue dot, and neither knows
-   about the glass. They sit inside third-party panels (the reload menu, the
-   account and model settings, the plugin manager) where that blue is the only
-   system colour on the page.
-
-   `appearance: none` hands the box over to this sheet: an inset well cut into
-   the panel, the accent fill when checked, and a tick drawn with a mask so it
-   inherits the ink. Radios take the same well as a circle with a dot.
-
-   The `!important` on the trigger size is deliberate: several plugins ship an
-   inline `style={{ margin: 0 }}` on the input, and a few set width/height
-   inline too. Inline wins over any selector, so the only way to keep the box
-   on the skin's metrics is to outrank it. ---------- */
-[data-dsh-float] :is(input[type='checkbox'], input[type='radio']) {
-  appearance: none;
-  -webkit-appearance: none;
-  box-sizing: border-box;
-  width: 15px !important;
-  height: 15px !important;
-  flex: none;
-  margin: 0 !important;
-  padding: 0;
-  border: 1px solid rgba(19, 45, 83, 0.28);
-  border-radius: 4px;
-  background: color-mix(in srgb, rgb(255 255 255) calc(46% * var(--dsh-aqua-frost, 1)), transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
-  transition: background-color 0.16s ease-out, border-color 0.16s ease-out, box-shadow 0.16s ease-out;
-  cursor: pointer;
-}
-
-[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):hover:not(:disabled) {
-  border-color: rgba(19, 45, 83, 0.44);
-  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
-}
-
-[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):checked {
-  border-color: var(--dsw-alias-button-primary-fill);
-  background: var(--dsw-alias-button-primary-fill);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    0 1px 3px rgba(19, 45, 83, 0.24);
-}
-
-/* The tick is a mask, so it takes the button's inverted ink rather than a
-   hard-coded white — the same pair the host uses on a primary button. */
-[data-dsh-float] input[type='checkbox']:checked {
-  position: relative;
-}
-
-[data-dsh-float] input[type='checkbox']:checked::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  background: var(--dsw-alias-label-primary-inverted);
-  mask: linear-gradient(45deg, transparent 46%, #000 46%) 0 0 / 100% 100%,
-    linear-gradient(-45deg, transparent 54%, #000 54%) 0 0 / 100% 100%;
-  mask-composite: intersect;
-}
-
-[data-dsh-float] input[type='radio'] {
-  border-radius: 50%;
-}
-
-[data-dsh-float] input[type='radio']:checked::after {
-  content: '';
-  position: absolute;
-  inset: 3.5px;
-  border-radius: 50%;
-  background: var(--dsw-alias-label-primary-inverted);
-}
-
-[data-dsh-float] input[type='radio']:checked {
-  position: relative;
-}
-
-[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):focus-visible {
-  outline: 2px solid var(--dsw-alias-link);
-  outline-offset: 2px;
-}
-
-[data-dsh-float] body[data-ds-dark-theme] :is(input[type='checkbox'], input[type='radio']) {
-  border-color: rgba(148, 180, 220, 0.3);
-  background: color-mix(in srgb, rgb(226 236 250) calc(10% * var(--dsh-aqua-frost, 1)), transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-[data-dsh-float] body[data-ds-dark-theme] :is(input[type='checkbox'], input[type='radio']):hover:not(:disabled) {
-  border-color: rgba(148, 180, 220, 0.46);
-  background: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
-}
-
-[data-dsh-float] body[data-ds-dark-theme] :is(input[type='checkbox'], input[type='radio']):checked {
-  border-color: var(--dsw-alias-button-primary-fill);
-  background: var(--dsw-alias-button-primary-fill);
 }
 
 /* ---------- Popup press: every floating list — a `role='menu'` command list,

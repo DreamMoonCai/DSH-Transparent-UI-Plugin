@@ -34,9 +34,10 @@ This repository forks [realhenrylan/DSH-Transparent-UI-Plugin](https://github.co
 | **Type and code** | The workbench's active tab chip goes from flat grey to glass; the pinned header of an expanded reasoning row, a transcript code block (including shiki's inline background and its banner) and the terminal pane each move to their own layer of the material. |
 | **Inside panels** | Settings rows, in-sheet cards, the plugin manager, scheduled tasks, the edited-files card, the shared segmented tabs and the change-request card all re-point their surfaces to translucent tokens in their own scope. |
 | **Scrollbars** | Neutral ink instead of the brand blue, a specular sweep down the thumb, and a groove that only appears under the pointer. The lane stays the host's 5px because other surfaces derive their padding from it. |
-| **Native controls** | `checkbox` and `radio` are drawn by this sheet through `appearance: none`: an inset well, the action fill when checked, and a tick masked in the inverted ink. |
+| **Cards in the transcript** | The diff / read / terminal blocks a tool call expands, and the comparison preview that opens over a file row, all take the secondary glass; the red/green row tints stay at low density. |
+| **Fullscreen panel** | Hitting fullscreen in the right workbench makes the card step aside: no clip, no margin, no own stacking context, so the panel covers the viewport the way the host designed. |
 | **Contrast fixes** | White-on-white tooltips, a switch thumb invisible in dark mode, a code block banner sliding under the header, and the 5px column jump caused by the press growing a horizontal scrollbar. |
-| **Tests** | 7 files / 52 checks → 29 files / 279 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
+| **Tests** | 7 files / 52 checks → 30 files / 284 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
 
 ## What the v1.5.0 baseline changed since v1.3.0
 
@@ -121,7 +122,7 @@ The composer and statistics line share one pane of glass, so the divider lands e
 | **Typography** | Space Grotesk for Latin and digits, a serif CJK face for body and display (Noto Serif SC, Songti/STSong, SimSun), serif headings and conversation tree, and a 14/10/8px radius language. |
 | **One switch** | Turn the theme off and the stock UI comes back; uninstall removes the layer with the plugin. |
 | **Multi-window** | Settings stay in sync when more than one window is open. |
-| **Tested** | 279 checks across 29 files: package contract, appearance, backdrops, panels, wallpaper selection, native controls, hover cards, the terminal and code blocks. |
+| **Tested** | 284 checks across 30 files: package contract, appearance, backdrops, panels, wallpaper selection, hover cards, the transcript block cards, the terminal and code blocks, and the fullscreen panel. |
 
 ## Controls
 

@@ -110,14 +110,17 @@ describe('a third-party pane inside the workbench card', () => {
 
   it('never clears the canvas colour globally', () => {
     // The real canvas must keep its fill. Every rule that clears the token has
-    // to be a glass surface's own scope — the workbench pane or a card inside
+    // to be a glass surface's own scope — the workbench pane, a block card in
     // the transcript — and float mode only, so compat mode is untouched.
     const selectors = all
       .filter(rule => /--dsw-alias-bg-base:\s*transparent/.test(rule.body))
       .map(rule => rule.selector)
     expect(selectors.length).toBeGreaterThan(0)
     for (const selector of selectors) {
-      const scoped = selector.includes('[data-dsh-details]') || selector.includes('md-code-block')
+      const scoped =
+        selector.includes('[data-dsh-details]') ||
+        selector.includes('md-code-block') ||
+        /\[data-(diff|read|terminal)\]/.test(selector)
       expect(scoped, `unscoped canvas clear: ${selector}`).toBe(true)
       expect(selector).toContain('[data-dsh-float]')
       expect(selector).not.toContain('[data-dsh-compat]')

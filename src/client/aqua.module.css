@@ -1499,6 +1499,82 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     0 8px 30px rgba(2, 6, 14, 0.32);
 }
 
+/* ---------- Third-party surfaces that ASK for the theme.
+
+   Neither of these is hard-coded, which is the point: both consume
+   `--dsw-alias-*`, and the tokens are opaque in float mode. Skinning them is
+   therefore the same job as the workbench card — re-point the tokens in the
+   scope the plugin mounts in, and its own rows become panes of the glass with no
+   per-selector guessing at hashed class names.
+
+   `dshmarket` (the plugin market, v1.80.1) paints from `--dsw-alias-bg-layer-1/2`
+   and `--dsw-alias-bg-base` throughout: the sticky head and category rail use
+   `var(--dshm-sticky-bg, var(--dsw-alias-bg-base, #fff))`, every card and tile
+   uses `--dsw-alias-settings-card-fill` falling back to layer-1, and the banner,
+   cover plates and search field use layer-2. `data-dsh-market-root` is the
+   component's own marker on its outermost div, so it survives any hashing.
+
+   `dsh-cost-meter` (v1.9.92) renders a native `<dialog class="cm-stat-dialog">`
+   with `background: var(--dsw-alias-bg-layer-2, var(--dsw-alias-bg-base, #fff))`
+   at the top of a 1000px sheet, plus layer-1 cards inside it. The class is a
+   plain string, not a CSS module, so it is a stable hook. Its dialog portals to
+   `<body>`, which is why this is not nested under a pane.
+
+   Both get layer-1…3 re-pointed one step down from the sheet fill. Ink and
+   hairlines keep their own tokens.
+
+   The canvas colour is deliberately NOT cleared here, unlike the workbench card.
+   `cm-input:is(select) :is(option, optgroup)` paints
+   `var(--dsw-alias-bg-base)!important` and repeats it as
+   `rgb(from var(--dsw-alias-bg-base) r g b / 1)`; a transparent value would turn
+   that dropdown black. The market never paints the canvas colour directly — it
+   reaches it only as the fallback inside `--dshm-sticky-bg`, which is answered
+   below — so leaving it alone costs nothing and keeps both plugins' own surfaces
+   intact. ---------- */
+[data-dsh-float] [data-dsh-market-root],
+[data-dsh-float] body :global(dialog.cm-stat-dialog) {
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(48% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(36% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(255 255 255) calc(26% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  /* The market's own sticky band would otherwise fall through to the canvas
+     colour it names as a fallback. */
+  --dshm-sticky-bg: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
+  --dshm-stuck-bg: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-market-root],
+[data-dsh-float] body[data-ds-dark-theme] :global(dialog.cm-stat-dialog) {
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
+  --dshm-sticky-bg: color-mix(in srgb, rgb(226 236 250) calc(13% * var(--dsh-aqua-frost, 1)), transparent);
+  --dshm-stuck-bg: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* The market's sheet keeps its sticky head legible over rows sliding under it,
+   so the band gets a light blur of its own rather than a solid fill. Keyed off
+   the local class stem, which a CSS module keeps after its hash. */
+[data-dsh-float] [data-dsh-market-root] [class*='stickyHead'] {
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.2));
+}
+
+/* The cost sheet paints its own plate from layer-2, so the token above is not
+   enough on its own: the dialog element itself carries the fill. It takes the
+   card material with the same 16px corner it declares. */
+[data-dsh-float] body :global(dialog.cm-stat-dialog) {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(19, 45, 83, 0.26);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :global(dialog.cm-stat-dialog) {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(148, 180, 220, 0.32);
+}
+
+
 /* ---------- Session panel (the "环境" card floating over the chat).
    0.2.3 adds it as an absolutely positioned `aside[data-session-panel]` that
    the host places from the chat gutter and sizes against the composer. The

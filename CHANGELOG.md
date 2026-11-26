@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Bring the plugin market and the session cost sheet onto the glass. Both were reported as white, and neither one is hard-coded: the market paints from `--dsw-alias-bg-layer-1/2`, `--dsw-alias-bg-base` and its own `--dshm-sticky-bg`, and the cost meter fills a native `<dialog class="cm-stat-dialog">` from `--dsw-alias-bg-layer-2` with layer-1 cards inside. Those tokens resolve to flat `#fff` in float mode, so both read as paper stacked on the water while every official surface around them was glass. The fix is the workbench card one: re-point the three layer tokens in the scope each plugin mounts in, which is `data-dsh-market-root` (the market own marker on its outermost div) and `:global(dialog.cm-stat-dialog)` (a plain string class the cost meter hands to `createPortal`, not a module name). The market sticky band answers `--dshm-sticky-bg` and `--dshm-stuck-bg` too, because its first fallback is the canvas colour, and it gets a light blur so rows sliding under it stop being legible. The canvas colour itself stays untouched: `cm-input:is(select) :is(option, optgroup)` paints `rgb(from var(--dsw-alias-bg-base) r g b / 1)`, and a transparent value there turns that dropdown black.
+
 ## v1.6.3
 
 - Answer `--dsh-surface` and `--dsh-accent` for third-party panes. DSH's theme defines neither, so a plugin writing `background: var(--dsh-surface, #1e1e24)` fell back to its own dark default — the Cursor pane came up as a near-black rectangle in light mode. The token layer now answers both: the card material for `--dsh-surface`, the brand ink for `--dsh-accent`. Nothing is forced transparent behind a plugin's back, so a pane that hard-codes a colour still looks the way its author drew it.

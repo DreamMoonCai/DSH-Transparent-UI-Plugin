@@ -62,6 +62,42 @@
      them, so they are denser than the card fill they frost over. */
   --dsh-aqua-glass-sticky-light: color-mix(in srgb, rgb(255 255 255) calc(88% * var(--dsh-aqua-frost, 1)), transparent);
   --dsh-aqua-glass-sticky-dark: color-mix(in srgb, rgb(34 38 47) calc(88% * var(--dsh-aqua-frost, 1)), transparent);
+  /* ---------- The menu surface family.
+
+     The host defines `--dsw-menu-surface-fill` (`rgba(252,253,254,0.7)`;
+     dark `rgba(48,49,54,0.64)`, under plain `body`) and then writes
+     `backdrop-filter: var(--dsw-menu-backdrop-filter)` on every floating menu
+     and on the session-stats sheet. That second token is defined NOWHERE in the
+     shipped theme — not in design-platform.css, not in either frontend bundle —
+     so the declaration is invalid at computed-value time and falls back to
+     `none`. Every menu therefore painted as a 70% white plate with no blur at
+     all: the translucent fill of a glass surface with the frost of a sheet of
+     paper. The elevation tokens are missing the same way, which is why those
+     plates also had no shadow.
+
+     Supplying them once, at the root, answers the whole family — the `Menu`
+     primitive's `.material` layer, the session-stats sheet
+     (`background: var(--dsw-specific-menu)` + the same filter), the proxy
+     dropdown and any future popup that asks the same question. */
+  --dsw-menu-backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.5)) saturate(140%);
+  --dsw-elevation-prominent: 0 16px 44px rgba(19, 45, 83, 0.2);
+  --dsw-elevation-panel: 0 8px 28px rgba(19, 45, 83, 0.16);
+  /* The missing blur and the missing elevation are the whole of the popup bug:
+     with the filter restored the host's own 70% fill finally reads as frosted
+     glass, which is exactly the material the surrounding panes use. The fill
+     itself is deliberately NOT re-pointed — the card material is 42% white, and
+     swapping it in here made these plates noticeably MORE transparent than the
+     sheet they hang over, which is the opposite complaint. These two tokens are
+     the ones the theme simply never defines, so the root is free to answer them;
+     `--dsw-menu-surface-fill` is left to the host rule on `body`. */
+  --dsw-menu-backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.5)) saturate(140%);
+  --dsw-elevation-prominent: 0 16px 44px rgba(19, 45, 83, 0.2);
+  --dsw-elevation-panel: 0 8px 28px rgba(19, 45, 83, 0.16);
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] {
+  --dsw-elevation-prominent: 0 16px 44px rgba(2, 6, 14, 0.55);
+  --dsw-elevation-panel: 0 8px 28px rgba(2, 6, 14, 0.45);
 }
 
 [data-dsh-aqua] [data-dsh-frame] {
@@ -2629,9 +2665,37 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
 }
 
-/* Dialogs keep their native token surface (bg-layer-2) and radius; no
-   translucent override and no backdrop blur —the override made the panel
-   muddy and the blur scrambled its fixed-position layout. */
+/* The same plate for the lists that do not wear `role='menu'`.
+
+   The session-stats sheet is `role='dialog'` (`xXe6ja_panel`, portalled to
+   <body>, `position: fixed` under an anchor-name), and third-party dropdowns
+   often use `role='listbox'` — the proxy page's mode picker is one
+   (`.dshp-menu`, fixed, placed from a rect). None of them matched the rule
+   above, so they kept the host's own fill and, before the token fix, no blur at
+   all. `position: fixed` is part of the selector on purpose: it is what makes
+   them float over the glass rather than sit in it, and it keeps the settings
+   sheet — also a `role='dialog'`, but a large centred plate — on the sheet
+   recipe instead of the menu one. */
+[data-dsh-float] [role='dialog'][style*='position-anchor']:not([class*='backdrop']),
+[data-dsh-float] [role='dialog'][style*='positionAnchor']:not([class*='backdrop']),
+[data-dsh-float] [role='listbox']:not([class*='backdrop']) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [role='dialog'][style*='position-anchor']:not([class*='backdrop']),
+[data-dsh-float] body[data-ds-dark-theme] [role='dialog'][style*='positionAnchor']:not([class*='backdrop']),
+[data-dsh-float] body[data-ds-dark-theme] [role='listbox']:not([class*='backdrop']) {
+  background: color-mix(in srgb, rgb(28 32 42) calc(68% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* ---------- Dialogs keep their native token surface (bg-layer-2) and radius;
+   no backdrop blur, because a `backdrop-filter` on a sheet makes it a containing
+   block for its `position: fixed` descendants the same way a transform does.
+   The proxy page's mode dropdown is exactly such a guest: it placed itself from
+   a `getBoundingClientRect` while its sheet was blurred, and the list resolved
+   that `fixed` against the sheet instead of the viewport, so it rendered off the
+   window edge. ---------- */
 [data-dsh-float] body[data-ds-dark-theme] [role='menu'] {
   background: color-mix(in srgb, rgb(28 32 42) calc(68% * var(--dsh-aqua-frost, 1)), transparent);
 }
@@ -2782,6 +2846,15 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
   box-shadow: 0 6px 18px var(--dsh-aqua-select-shadow-pressed);
 }
 
+/* The geometric press, for the popups the controller tracks through
+   `data-dsh-aqua-pressable`. The shadow above is the static cue; this is the
+   real gesture, the same angle and budget the cards use. It needs its own
+   transition because the transform is written inline per pointer frame and must
+   be interpolated on the way in and on the way out. */
+[data-dsh-float][data-dsh-aqua-press] [data-dsh-aqua-pressable] {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ---------- Popups INSIDE the composer card: the "/" command list, the
    @ mention list and their sub-pickers. They mount in the card's own overlay
    anchor (slot conversation.input.overlay, the card's first child), so they sit
@@ -2917,7 +2990,24 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
   animation: dsh-aqua-rise 0.3s var(--ds-ease-in-out) both;
 }
 
-[data-dsh-float] [role='dialog'] {
+/* A dialog's entrance is opacity-only, and it does not apply to the small
+   anchored popups at all.
+
+   Two separate reasons, both recorded here because they looked like one bug. The
+   keyframes used to carry `translateY(8px) scale(0.985)`, and a transform makes
+   the sheet a containing block for every `position: fixed` descendant for as long
+   as it runs — the proxy page's mode dropdown is one (`position: fixed` inside the
+   settings sheet, placed from `getBoundingClientRect`), so opening it during the
+   entrance anchored it to the still-translated sheet and it flew off the window
+   edge. The same rule the page transitions already obey applies here: containers
+   animate opacity, never geometry.
+
+   And a stats popover is not a sheet. It mounts already anchored, so fading it in
+   read as the box flickering through a see-through state before settling — the
+   complaint was literally "a transparent frame appears, then it snaps opaque".
+   The `position-anchor` / `positionAnchor` inline style is what tells them apart:
+   it only ever appears on an anchored popup. */
+[data-dsh-float] [role='dialog']:not([style*='position-anchor']):not([style*='positionAnchor']) {
   animation: dsh-aqua-dialog-in 0.24s var(--ds-ease-in-out);
 }
 
@@ -2938,7 +3028,7 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
 }
 
 @keyframes dsh-aqua-dialog-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  from { opacity: 0; }
 }
 
 /* ---------- Compatibility mode: stock layout, generic glass material.

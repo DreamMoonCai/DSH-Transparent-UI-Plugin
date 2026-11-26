@@ -90,6 +90,18 @@ const SEAMS: readonly Seam[] = [
   { attribute: 'data-dsh-aqua-spot', selector: '[data-changed-files]', first: true },
   // The sidebar wordmark button (its badge plate gets the official pill).
   { attribute: 'data-dsh-wordmark', selector: '[class*="sidebarCol"] [class*="brand"]', first: true },
+  // Floating popups: they take the press but never the glow. A menu or a picker is
+  // its own glass, so the cursor-driven press measures it fine; the glow overlay
+  // cannot go inside one, both because these boxes scroll (`overflow-y: auto`, so
+  // an absolutely positioned child grows a scrollbar) and because the pane rule
+  // keyed off `data-dsh-aqua-spot` sets `position: relative`, which would tear a
+  // `fixed` popup out of the trigger it is anchored to.
+  //
+  // The composer card's own "/" and "@" lists are excluded: they live inside the
+  // card, which is already a spot, and pressing the list separately would fight
+  // the card's own press mid-gesture.
+  { attribute: 'data-dsh-aqua-pressable', selector: '[role="menu"]:not([data-composer-card] *), [role="listbox"]:not([data-composer-card] *)' },
+  { attribute: 'data-dsh-aqua-pressable', selector: 'body > [role="dialog"][style*="position-anchor"], body > [role="dialog"][style*="positionAnchor"]' },
 ]
 
 function stamp(seam: Seam): void {

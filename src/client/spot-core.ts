@@ -18,12 +18,37 @@ export const GLOW_ATTR = 'data-dsh-aqua-glow'
 /** Marker set on a pane while the pointer is inside it. */
 export const ON_ATTR = 'data-spot-on'
 
+/**
+ * A floating popup that takes the press but NOT the glow.
+ *
+ * A `role='menu'` list, a `role='listbox'` picker and a small anchored dialog
+ * are `position: fixed` boxes that are already their own glass, so the
+ * cursor-driven press measures them exactly like a card. They cannot take the
+ * glow overlay, for two reasons: the overlay is an absolutely positioned child
+ * and these boxes scroll (`overflow-y: auto`), so appending one grows a scrollbar
+ * out of nowhere — the trap recorded for the session panel; and the pane rule
+ * that `SPOT_ATTR` triggers sets `position: relative`, which would tear a fixed
+ * popup out of its anchor.
+ *
+ * So they carry this separate marker: the controller tracks the pointer over
+ * them and writes the same transform, and never injects an overlay.
+ */
+export const PRESSABLE_ATTR = 'data-dsh-aqua-pressable'
+
+/** Selector matching every stamped popup. */
+export const PRESSABLE_SELECTOR = `[${PRESSABLE_ATTR}]`
+
 /** Selector matching every stamped pane. */
 export const SPOT_SELECTOR = `[${SPOT_ATTR}]`
 
 /** Nearest stamped pane from an event target (null when outside all panes). */
 export function closestSpot(target: EventTarget | null): HTMLElement | null {
   return target instanceof Element ? target.closest<HTMLElement>(SPOT_SELECTOR) : null
+}
+
+/** Nearest stamped popup from an event target (null when outside all of them). */
+export function closestPressable(target: EventTarget | null): HTMLElement | null {
+  return target instanceof Element ? target.closest<HTMLElement>(PRESSABLE_SELECTOR) : null
 }
 
 /** Every stamped pane in document order. */

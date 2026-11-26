@@ -35,8 +35,8 @@
  * of the toggles.
  */
 import {
-  closestSpot, ensureGlow, glassIsOwnBox, glassLocalRect, GLOW_ATTR, inside, ON_ATTR, replacedElement, spotElements,
-  startOverlayKeeper, visualRect,
+  closestPressable, closestSpot, ensureGlow, glassIsOwnBox, glassLocalRect, GLOW_ATTR, inside, ON_ATTR,
+  replacedElement, spotElements, startOverlayKeeper, visualRect,
 } from './spot-core.ts'
 
 /** html attribute the layer uses to switch the glow effect (its toggle). */
@@ -406,8 +406,115 @@ export function startSpotlight(): () => void {
     })
   }
 
+  /** The popup currently carrying a press (cleared on leave). */
+  let currentPopup: HTMLElement | null = null
+  let popupRaf = 0
+
+  /**
+   * Would a live transform on this popup re-anchor something inside it?
+   *
+   * A transform makes its element a containing block for `position: fixed`
+   * descendants. That is the whole of the "dropdown flew off the window" bug: the
+   * proxy page's mode list is fixed and lives inside the settings sheet, which was
+   * itself transformed by its entrance animation, so the list resolved its own
+   * `fixed` against the sheet instead of the viewport. The same trap would bite
+   * any popup that hosts such a guest, so it is checked instead of assumed.
+   */
+  const holdsFixedGuest = (popup: HTMLElement): boolean => {
+    for (const node of popup.querySelectorAll<HTMLElement>('*')) {
+      const style = getComputedStyle(node)
+      if (style.position === 'fixed' && style.display !== 'none' && style.visibility !== 'hidden') {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Write the press onto a popup.
+   *
+   * Same recipe as the panes — the angle and the scale share one budget so a wide
+   * surface cannot throw its edge past its own box — but the pivot is the popup's
+   * own centre and nothing else is touched: no glow overlay (it would grow a
+   * scrollbar), no `position` (these are `fixed` and must stay anchored to their
+   * trigger).
+   */
+  const writePress = (popup: HTMLElement, clientX: number, clientY: number): void => {
+    popupRaf = 0
+    if (!tiltGated()) {
+      if (tilted.has(popup)) endPress(popup)
+      return
+    }
+    const rect = popup.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+    if (!inside(rect, clientX, clientY)) {
+      endPress(popup)
+      return
+    }
+    // Checked once per entry, before the first transform lands.
+    if (!tilted.has(popup) && holdsFixedGuest(popup)) {
+      currentPopup = null
+      return
+    }
+    const dx = Math.min(0.5, Math.max(-0.5, (clientX - rect.left) / rect.width - 0.5))
+    const dy = Math.min(0.5, Math.max(-0.5, (clientY - rect.top) / rect.height - 0.5))
+    const base = TILT_MAX
+    const halfWidth = Math.max(1, rect.width / 2)
+    const need = halfWidth * (Math.sin(base) + SCALE_GROWTH)
+    const fit = Math.min(1, TILT_LIFT_BUDGET / Math.max(1, need))
+    const tiltMax = base * fit
+    // `offsetWidth`/`offsetHeight` rather than the rect: a popup that is already
+    // mid-press reports a scaled rect, and feeding that back into the origin
+    // makes the pivot drift on every frame.
+    popup.style.transformOrigin = `${popup.offsetWidth / 2}px ${popup.offsetHeight / 2}px`
+    popup.style.transform =
+      `perspective(${TILT_PERSPECTIVE}px) rotateX(${tiltMax * -2 * dy}rad) rotateY(${tiltMax * 2 * dx}rad) scale(${1 + SCALE_GROWTH * fit})`
+    tilted.add(popup)
+  }
+
+  const press = (event: PointerEvent, popup: HTMLElement): void => {
+    if (popup !== currentPopup) {
+      startPress(event, popup)
+      return
+    }
+    if (popupRaf !== 0) return
+    popupRaf = requestAnimationFrame(() => { writePress(popup, event.clientX, event.clientY) })
+  }
+
+  const startPress = (event: PointerEvent, popup: HTMLElement): void => {
+    if (currentPopup !== null && currentPopup !== popup) endPress(currentPopup)
+    // A popup opened from a pane keeps that pane's session alive: the pointer
+    // never "left" it as far as the document is concerned, so the card would stay
+    // tilted and lit underneath the popup for as long as the list is open.
+    if (current !== null && current !== popup) clearSpot(current)
+    currentPopup = popup
+    writePress(popup, event.clientX, event.clientY)
+  }
+
+  const endPress = (popup: HTMLElement): void => {
+    if (popupRaf !== 0) {
+      cancelAnimationFrame(popupRaf)
+      popupRaf = 0
+    }
+    if (currentPopup === popup) currentPopup = null
+    if (!tilted.has(popup)) return
+    tilted.delete(popup)
+    // Snap, not glide: the popup is about to be dismissed by whatever opened it,
+    // and a 0.3s release on a node React is removing mid-flight is pure flicker.
+    popup.style.setProperty('transition', 'none')
+    popup.style.removeProperty('transform')
+    popup.style.removeProperty('transform-origin')
+    void popup.offsetWidth
+    popup.style.removeProperty('transition')
+  }
+
   const onMove = (event: PointerEvent): void => {
     if (!hoverGated()) return
+    const popup = closestPressable(event.target)
+    if (popup !== null) {
+      press(event, popup)
+      return
+    }
     const spot = closestSpot(event.target)
     if (spot === null || session?.spot !== spot) return
     paint(session, event.clientX, event.clientY)
@@ -415,6 +522,11 @@ export function startSpotlight(): () => void {
 
   const onOver = (event: PointerEvent): void => {
     if (!hoverGated()) return
+    const popup = closestPressable(event.target)
+    if (popup !== null) {
+      startPress(event, popup)
+      return
+    }
     const spot = closestSpot(event.target)
     if (spot === null) return
     // The settings overlay renders INSIDE the sidebar column: while it is
@@ -437,6 +549,14 @@ export function startSpotlight(): () => void {
   }
 
   const onOut = (event: PointerEvent): void => {
+    const popup = closestPressable(event.target)
+    if (popup !== null) {
+      if (popup === currentPopup) {
+        const rect = popup.getBoundingClientRect()
+        if (!inside(rect, event.clientX, event.clientY)) endPress(popup)
+      }
+      return
+    }
     const spot = closestSpot(event.target)
     if (spot === null || spot !== current) return
     // Moving between children keeps the effects live; leaving the visible
@@ -496,6 +616,15 @@ export function startSpotlight(): () => void {
     keeper()
     if (raf !== 0) cancelAnimationFrame(raf)
     if (refreshRaf !== 0) cancelAnimationFrame(refreshRaf)
+    if (popupRaf !== 0) {
+      cancelAnimationFrame(popupRaf)
+      popupRaf = 0
+    }
+    if (currentPopup !== null) {
+      currentPopup.style.removeProperty('transform')
+      currentPopup.style.removeProperty('transform-origin')
+      currentPopup = null
+    }
     for (const id of settle.values()) clearTimeout(id)
     settle.clear()
     for (const spot of spotElements()) {

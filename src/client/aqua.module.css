@@ -2043,6 +2043,146 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   }
 }
 
+/* ---------- Native checkboxes and radios.
+
+   Both are painted by the browser: on Windows a checked box is a solid
+   `#0078D4` square with a white tick, a radio a blue dot, and neither knows
+   about the glass. They sit inside third-party panels (the reload menu, the
+   account and model settings, the plugin manager) where that blue is the only
+   system colour on the page.
+
+   `appearance: none` hands the box over to this sheet: an inset well cut into
+   the panel, the accent fill when checked, and a tick drawn with a mask so it
+   inherits the ink. Radios take the same well as a circle with a dot.
+
+   The `!important` on the trigger size is deliberate: several plugins ship an
+   inline `style={{ margin: 0 }}` on the input, and a few set width/height
+   inline too. Inline wins over any selector, so the only way to keep the box
+   on the skin's metrics is to outrank it. ---------- */
+[data-dsh-float] :is(input[type='checkbox'], input[type='radio']) {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 15px !important;
+  height: 15px !important;
+  flex: none;
+  margin: 0 !important;
+  padding: 0;
+  border: 1px solid rgba(19, 45, 83, 0.28);
+  border-radius: 4px;
+  background: color-mix(in srgb, rgb(255 255 255) calc(46% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
+  transition: background-color 0.16s ease-out, border-color 0.16s ease-out, box-shadow 0.16s ease-out;
+  cursor: pointer;
+}
+
+[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):hover:not(:disabled) {
+  border-color: rgba(19, 45, 83, 0.44);
+  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):checked {
+  border-color: var(--dsw-alias-button-primary-fill);
+  background: var(--dsw-alias-button-primary-fill);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 1px 3px rgba(19, 45, 83, 0.24);
+}
+
+/* The tick is a mask, so it takes the button's inverted ink rather than a
+   hard-coded white — the same pair the host uses on a primary button. */
+[data-dsh-float] input[type='checkbox']:checked {
+  position: relative;
+}
+
+[data-dsh-float] input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: var(--dsw-alias-label-primary-inverted);
+  mask: linear-gradient(45deg, transparent 46%, #000 46%) 0 0 / 100% 100%,
+    linear-gradient(-45deg, transparent 54%, #000 54%) 0 0 / 100% 100%;
+  mask-composite: intersect;
+}
+
+[data-dsh-float] input[type='radio'] {
+  border-radius: 50%;
+}
+
+[data-dsh-float] input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  inset: 3.5px;
+  border-radius: 50%;
+  background: var(--dsw-alias-label-primary-inverted);
+}
+
+[data-dsh-float] input[type='radio']:checked {
+  position: relative;
+}
+
+[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+[data-dsh-float] :is(input[type='checkbox'], input[type='radio']):focus-visible {
+  outline: 2px solid var(--dsw-alias-link);
+  outline-offset: 2px;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is(input[type='checkbox'], input[type='radio']) {
+  border-color: rgba(148, 180, 220, 0.3);
+  background: color-mix(in srgb, rgb(226 236 250) calc(10% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is(input[type='checkbox'], input[type='radio']):hover:not(:disabled) {
+  border-color: rgba(148, 180, 220, 0.46);
+  background: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is(input[type='checkbox'], input[type='radio']):checked {
+  border-color: var(--dsw-alias-button-primary-fill);
+  background: var(--dsw-alias-button-primary-fill);
+}
+
+/* ---------- The skin's own hover tip.
+
+   `title=` is drawn by the platform — a white rectangle with a hairline border
+   in the system font, sitting outside the page's paint. No selector reaches it,
+   so the only way to keep one tooltip language is to take the string off the
+   attribute and draw it here. `native-tip.ts` moves `title` to
+   `data-dsh-tip` and shows this element on hover or focus.
+
+   The recipe is the host's own tooltip chip, so a tip written by a plugin and a
+   tip written by the shell look the same. ---------- */
+[data-dsh-native-tip] {
+  position: fixed;
+  z-index: 1200;
+  max-width: min(50vw, calc(100vw - 24px));
+  padding: 3px 7px;
+  border-radius: var(--dsw-radius-sm, 8px);
+  background: var(--dsw-alias-tooltip-bg);
+  color: var(--dsw-alias-tooltip-label);
+  font-family: var(--dsh-aqua-font-ui);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(2, 6, 14, 0.28);
+}
+
+[data-dsh-native-tip][hidden] {
+  display: none;
+}
+
 /* ---------- Popup press: every floating list — a `role='menu'` command list,
    a `role='listbox'` model picker, a popover card — takes the same shadow
    press as the skin's own panes. They belong to other plugins and are

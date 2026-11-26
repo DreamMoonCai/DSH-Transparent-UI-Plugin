@@ -22,6 +22,7 @@ import { startSeamStamper } from './seam-stamper.ts'
 import { mountWhale, type WhaleHandle } from './whale.ts'
 import { mountMesh, type MeshHandle } from './mesh.ts'
 import { startSpotlight, SPOTLIGHT_ATTRIBUTE, PRESS_ATTRIBUTE } from './spotlight.ts'
+import { startNativeTips } from './native-tip.ts'
 
 /** html attribute selecting the Aqua layer: CSS hooks and ambient effects. */
 export const AQUA_ATTRIBUTE = 'data-dsh-aqua'
@@ -632,6 +633,7 @@ export class AquaLayer {
   private themeListener: (() => void) | undefined
   private seamDisposer: (() => void) | undefined
   private spotlightDisposer: (() => void) | undefined
+  private nativeTipHandle: { dispose: () => void } | undefined
   private whaleHandle: WhaleHandle | undefined
   private meshHandle: MeshHandle | undefined
   /** Object URL of the current large-video wallpaper (revoked on replace). */
@@ -1123,6 +1125,7 @@ export class AquaLayer {
     this.mountFluid()
     this.startSeamStamper()
     this.startSpotlightFeed()
+    this.startNativeTips()
     this.syncWhale()
     this.syncMesh()
   }
@@ -1163,6 +1166,8 @@ export class AquaLayer {
     document.documentElement.removeAttribute(PRESS_ATTRIBUTE)
     this.spotlightDisposer?.()
     this.spotlightDisposer = undefined
+    this.nativeTipHandle?.dispose()
+    this.nativeTipHandle = undefined
     this.whaleHandle?.dispose()
     this.whaleHandle = undefined
     this.meshHandle?.dispose()
@@ -1229,5 +1234,15 @@ export class AquaLayer {
   private startSpotlightFeed(): void {
     if (this.spotlightDisposer !== undefined) return
     this.spotlightDisposer = startSpotlight()
+  }
+
+  /**
+   * Replace the platform's `title=` tip with the skin's own chip (idempotent
+   * per mount). The platform draws that rectangle itself, so no selector
+   * reaches it; the text has to be moved off the attribute.
+   */
+  private startNativeTips(): void {
+    if (this.nativeTipHandle !== undefined) return
+    this.nativeTipHandle = startNativeTips()
   }
 }

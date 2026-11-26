@@ -144,6 +144,39 @@
   background: transparent;
 }
 
+/* A third-party pane inside the card paints the CANVAS colour on its own root,
+   not a card token. `dsh-github-flow` is the one in front of us: its sheet sets
+   `.dsh-github-panel { background: var(--dsw-alias-bg-base, #ffffff) }` and the
+   same for `.dsh-github-rightbar-container`, so the whole tab landed as one
+   opaque `#F4F8FD` plate filling the glass card, with its own white cards
+   stacked on top of that. Nothing there is hard-coded — it consumes our tokens,
+   and the token is simply opaque.
+
+   Clearing it at the card's scope is what fixes the whole family at once: every
+   pane mounted in this workbench, and every future plugin that reaches for the
+   canvas colour to mean "paint the page", paints nothing and lets the card's
+   glass through. Ink keeps its own `label-*` tokens so text stays legible, and
+   the rule stays inside the right column, so the real canvas is untouched.
+
+   The layer tokens follow, one notch below the sheet's own re-pointing: a card
+   the pane draws for itself is secondary glass, not an opaque plate. */
+[data-dsh-float] [data-dsh-details] [data-dockkit-pane-body],
+[data-dsh-float] [data-dsh-details] [data-dockkit-host='dock'] > section {
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(46% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(255 255 255) calc(24% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-dockkit-pane-body],
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-dockkit-host='dock'] > section {
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
 /* The docked pane fills the card's INNER box instead of the column's border
    box. The host draws it as an absolutely positioned canvas pinned to
    right/top/bottom with an inline pixel width taken from the grid track, so
@@ -1696,22 +1729,27 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    keeps everything it actually needs: the rows, the scrollbar and the selection.
 
    The seam is the host's own `data-sidebar-terminal` on the section; the screen
-   is found structurally (`:has(> .xterm)`) because its class is build-hashed,
-   while `.xterm` and `.xterm-viewport` are xterm's own stable names. ---------- */
-[data-dsh-float] [data-sidebar-terminal] :has(> .xterm) {
+   is found structurally (`:has(> :global(.xterm))`) because its class is
+   build-hashed, while the xterm element's own names have to be escaped past the
+   CSS-module transform — lightningcss rewrites every bare class selector in this
+   file into `<hash>_<local>`, which would have turned `.xterm` into
+   `._4y1oNG_xterm`, a class xterm never puts on its element. `:global()` is how
+   the host's own sheet reaches the same element. ---------- */
+[data-dsh-float] [data-sidebar-terminal] :has(> :global(.xterm)) {
   background: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
   border-radius: 14px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     inset 0 0 0 1px rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.7));
+  overflow: hidden;
 }
 
-[data-dsh-float] [data-sidebar-terminal] .xterm-viewport {
+[data-dsh-float] [data-sidebar-terminal] :global(.xterm-viewport) {
   background: transparent !important;
 }
 
-[data-dsh-float] body[data-ds-dark-theme] [data-sidebar-terminal] :has(> .xterm) {
+[data-dsh-float] body[data-ds-dark-theme] [data-sidebar-terminal] :has(> :global(.xterm)) {
   background: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),

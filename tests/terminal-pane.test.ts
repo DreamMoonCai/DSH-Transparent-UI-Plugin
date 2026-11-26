@@ -45,22 +45,39 @@ function bodiesFor(predicate: (selector: string) => boolean): string[] {
 
 const SCREEN = (selector: string) =>
   selector.includes('[data-sidebar-terminal]') &&
-  selector.includes(':has(> .xterm)') &&
+  selector.includes(':has(> :global(.xterm))') &&
   !selector.includes('[data-ds-dark-theme]')
 
 const SCREEN_DARK = (selector: string) =>
   selector.includes('[data-sidebar-terminal]') &&
-  selector.includes(':has(> .xterm)') &&
+  selector.includes(':has(> :global(.xterm))') &&
   selector.includes('[data-ds-dark-theme]')
 
 const VIEWPORT = (selector: string) =>
-  selector.includes('[data-sidebar-terminal]') && selector.includes('.xterm-viewport')
+  selector.includes('[data-sidebar-terminal]') && selector.includes(':global(.xterm-viewport)')
 
 describe('the terminal pane keeps its own sheet of glass', () => {
   it('finds the screen by structure, not by the hashed class', () => {
     // The screen's class name is build-hashed (`_70dcBq_screen` / `_4y1oNG_screen`
     // depending on the release), so it must be matched through xterm's own child.
     expect(bodiesFor(SCREEN).length).toBeGreaterThan(0)
+  })
+
+  it("escapes xterm's own class names past the CSS-module transform", () => {
+    // `tsdown` runs this file through lightningcss with `cssModules`, which
+    // rewrites EVERY bare class selector into `<hash>_<local>`. A bare `.xterm`
+    // therefore compiled to `._4y1oNG_xterm` — a class xterm never puts on its
+    // element — so the rule was inert and the terminal kept its opaque sheet.
+    // xterm's names must arrive through `:global()`; the host's own sheet does
+    // the same for `:global(.xterm-viewport)`.
+    for (const name of ['.xterm', '.xterm-viewport']) {
+      // Blank out the escaped occurrences first, so only a bare one can match.
+      const outside = flat.replace(/:global\([^)]*\)/g, 'GLOBAL')
+      const bare = new RegExp(`(^|[\\s,>+~])\\${name}(?![\\w-])`)
+      expect(outside).not.toMatch(bare)
+    }
+    expect(flat).toContain(':global(.xterm)')
+    expect(flat).toContain(':global(.xterm-viewport)')
   })
 
   it('replaces the opaque canvas fill with the secondary glass', () => {

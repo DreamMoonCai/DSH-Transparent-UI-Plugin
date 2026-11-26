@@ -79,12 +79,18 @@ describe('the two variables a third-party pane reaches for', () => {
     // Clearing --dsw-alias-bg-base inside a plugin's own container would blank
     // fills that plugin owns on purpose. The one global answer is the variable
     // above; anything else has to be scoped to a surface this sheet builds.
+    // `[class*='mainPanel'][data-global-panel]` counts as such a surface: the
+    // layout sets `data-global-panel` only while a plugin page is showing
+    // INSTEAD of the conversation, and the page it holds asks for the canvas
+    // colour to mean "paint the page" — the same request the workbench pane
+    // answers, one column over.
     const canvasClears = bodiesOf('--dsw-alias-bg-base')
     for (const rule of canvasClears) {
       const scoped =
         rule.selector.includes('[data-dsh-details]') ||
         rule.selector.includes('md-code-block') ||
         rule.selector.includes('dsh-timeline') ||
+        rule.selector.includes("[class*='mainPanel'][data-global-panel]") ||
         /\[data-(diff|read|terminal)\]/.test(rule.selector)
       if (scoped) continue
       expect(rule.body).not.toMatch(/--dsw-alias-bg-base:\s*transparent/)

@@ -1543,6 +1543,123 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     0 8px 30px rgba(2, 6, 14, 0.32);
 }
 
+/* ---------- A third-party page in the main slot.
+
+   The plugin manager and the scheduled-tasks page render their own root as
+   `<section data-plugin-panel>` and get the floating card above. Not every page
+   does: a plugin that registers into the `main` slot mounts as
+   `div[class*='mainPanel'] > its own root`, and `dsh-github-flow` puts
+   `.dsh-github-panel` there — a div that paints
+   `background: var(--dsw-alias-bg-base, #fff)` over the full width and height.
+   Nothing in this sheet matched it, so the tab landed as one opaque plate: the
+   workbench pane scope below is keyed off `[data-dsh-details]`, which is the
+   right column, and the plugin-panel rule needs the section marker.
+
+   The hook is the host's own `data-global-panel` on `[class*='mainPanel']`.
+   It appears exactly when a plugin page is showing instead of the conversation
+   (`panelId !== null`), so the conversation itself never matches.
+
+   Clearing the canvas colour there is what turns the page into glass: every
+   plate in that plugin — the panel, the right-bar container, the search field,
+   the inputs, the command boxes, 30-odd surfaces — asks for the canvas colour or
+   layer-1/2 and nothing is hard-coded. The layer tokens go one step below the
+   card, so a card the page draws for itself is secondary glass. ---------- */
+[data-dsh-float] [class*='mainPanel'][data-global-panel] {
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(46% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(255 255 255) calc(24% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-settings-card-fill: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [class*='mainPanel'][data-global-panel] {
+  --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-settings-card-fill: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* The page root itself is a full-bleed plate. Clearing the token makes it
+   transparent, but these two roots set the fill as a literal `var()` fallback
+   pair — `background: var(--dsw-alias-bg-base, #ffffff)` — which a transparent
+   value satisfies, so the element paints nothing and the frame's water shows
+   through. Both names are plain strings in the plugin's injected sheet, not
+   module names, so `:global` keeps the class as written. */
+[data-dsh-float] [class*='mainPanel'][data-global-panel] :is(
+  :global(.dsh-github-panel),
+  :global(.dsh-github-rightbar-container)
+) {
+  background: transparent;
+}
+
+/* A page mounted in the main slot gets the same card the plugin manager does,
+   so the two read as the same surface. The padding is the plugin's own; only
+   the box is added. */
+[data-dsh-float] [class*='mainPanel'][data-global-panel] > :is(
+  :global(.dsh-github-panel)
+) {
+  box-sizing: border-box;
+  margin: 8px 16px 12px;
+  width: calc(100% - 32px);
+  height: calc(100% - 20px);
+  padding: 20px 24px;
+  border: 1px solid rgba(19, 45, 83, 0.26);
+  border-radius: 20px;
+  background: var(--dsh-aqua-glass-card-light);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 10px 34px rgba(19, 45, 83, 0.16);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [class*='mainPanel'][data-global-panel] > :is(
+  :global(.dsh-github-panel)
+) {
+  border-color: rgba(148, 180, 220, 0.32);
+  background: var(--dsh-aqua-glass-card-dark);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 8px 30px rgba(2, 6, 14, 0.32);
+}
+
+/* The plugin's own modal is a `position: fixed` overlay portalled to nothing —
+   it renders inside the page — with a `role='dialog'` plate and a 45% black
+   scrim. It is not a DSH dialog, so none of the sheet rules reach it. The
+   overlay keeps its scrim (it is what dims the page); the dialog takes the
+   sheet material, and the scrim's 2px blur drops, because a filtered ancestor
+   would re-anchor the plugin's `position: fixed` dropdowns the same way the
+   settings sheet did. */
+[data-dsh-float] :global(.dsh-github-modal-overlay) {
+  backdrop-filter: none;
+}
+
+[data-dsh-float] :global(.dsh-github-modal-dialog),
+[data-dsh-float] :global(.dsh-github-help-dialog),
+[data-dsh-float] :global(.dsh-github-pr-modal-dialog),
+[data-dsh-float] :global(.dsh-github-issue-modal-dialog),
+[data-dsh-float] :global(.dsh-github-run-modal-dialog) {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(19, 45, 83, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 18px 48px rgba(19, 45, 83, 0.22);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-github-modal-dialog),
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-github-help-dialog),
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-github-pr-modal-dialog),
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-github-issue-modal-dialog),
+[data-dsh-float] body[data-ds-dark-theme] :global(.dsh-github-run-modal-dialog) {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(148, 180, 220, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 18px 48px rgba(2, 6, 14, 0.55);
+}
+
 /* ---------- Third-party surfaces that ASK for the theme.
 
    Neither of these is hard-coded, which is the point: both consume

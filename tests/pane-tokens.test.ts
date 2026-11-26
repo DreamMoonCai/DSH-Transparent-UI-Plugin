@@ -111,7 +111,8 @@ describe('a third-party pane inside the workbench card', () => {
   it('never clears the canvas colour globally', () => {
     // The real canvas must keep its fill. Every rule that clears the token has
     // to be a glass surface's own scope — the workbench pane, a block card in
-    // the transcript — and float mode only, so compat mode is untouched.
+    // the transcript, a plugin page standing in for the conversation — and float
+    // mode only, so compat mode is untouched.
     const selectors = all
       .filter(rule => /--dsw-alias-bg-base:\s*transparent/.test(rule.body))
       .map(rule => rule.selector)
@@ -121,6 +122,11 @@ describe('a third-party pane inside the workbench card', () => {
         selector.includes('[data-dsh-details]') ||
         selector.includes('md-code-block') ||
         selector.includes('dsh-timeline') ||
+        // `[class*='mainPanel'][data-global-panel]` is the host's own marker on
+        // the column that holds a plugin page INSTEAD of the conversation: the
+        // layout sets `data-global-panel` only while `activePanelId !== null`.
+        // It is a page scope, not the canvas.
+        selector.includes("[class*='mainPanel'][data-global-panel]") ||
         /\[data-(diff|read|terminal)\]/.test(selector)
       expect(scoped, `unscoped canvas clear: ${selector}`).toBe(true)
       expect(selector).toContain('[data-dsh-float]')

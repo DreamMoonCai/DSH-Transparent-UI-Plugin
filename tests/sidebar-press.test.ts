@@ -144,6 +144,30 @@ describe('the fixed guests survive the tilt', () => {
     expect(cancel).toBeGreaterThan(-1)
     expect(release).toBeGreaterThan(cancel)
   })
+
+  it('lifts per guest, not once per session', () => {
+    // `if (lifted.size > 0) return` skipped the lift whenever the map still held an
+    // earlier guest — a quick leave-then-enter then let the transform land on a
+    // button that never left the pane. That is the low-frequency flash. The
+    // comment above the function quotes the old guard, so it is stripped first.
+    const code = controller.replace(/\/\*[\s\S]*?\*\//g, '')
+    expect(code).toMatch(/if \(lifted\.has\(guest\)\) continue/)
+    expect(code).not.toMatch(/if \(lifted\.size > 0\) return/)
+  })
+
+  it('restores only the guests of the settling pane', () => {
+    // A settle timer can fire while a different pane has started its own press; a
+    // global restore would pull that pane's button home mid-rotation.
+    expect(controller).toMatch(/const restoreFixedGuests = \(spot\?: HTMLElement\)/)
+    expect(controller).toMatch(/if \(spot !== undefined && home\.owner !== spot\) continue/)
+    expect(controller).toMatch(/restoreFixedGuests\(spot\)/)
+  })
+
+  it('flushes every guest on teardown', () => {
+    // A guest parked on <body> would outlive the theme layer and never go home.
+    const teardown = controller.slice(controller.lastIndexOf('return () => {'))
+    expect(teardown).toContain('restoreFixedGuests()')
+  })
 })
 
 describe('the settings sheet still stops the tilt', () => {

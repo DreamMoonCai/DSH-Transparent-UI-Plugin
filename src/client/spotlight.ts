@@ -214,27 +214,45 @@ export function startSpotlight(): () => void {
    * resolving against the viewport exactly as it did before the transform existed.
    * It is put back where it came from once the press settles.
    */
-  const lifted = new Map<HTMLElement, { parent: Node, next: Node | null }>()
+  const lifted = new Map<HTMLElement, { parent: Node, next: Node | null, owner: HTMLElement }>()
 
+  /**
+   * Take every fixed guest of this pane out of it.
+   *
+   * Keyed per guest, not guarded on the map being empty. A single global
+   * `if (lifted.size > 0) return` looks equivalent and is not: a quick
+   * leave-then-enter can find the map still holding an earlier guest while this
+   * pane's own button is back inside the pane, and the guard then skips the lift
+   * entirely — the transform lands on a button that never left, which is the flash
+   * that only showed up some of the time.
+   */
   const liftFixedGuests = (spot: HTMLElement): void => {
-    if (lifted.size > 0) return
     for (const guest of spot.querySelectorAll<HTMLElement>(FIXED_GUEST)) {
+      if (lifted.has(guest)) continue
       if (window.getComputedStyle(guest).position !== 'fixed') continue
       const parent = guest.parentNode
       if (parent === null) continue
-      lifted.set(guest, { parent, next: guest.nextSibling })
+      lifted.set(guest, { parent, next: guest.nextSibling, owner: spot })
       document.body.appendChild(guest)
     }
   }
 
-  const restoreFixedGuests = (): void => {
-    for (const [guest, home] of lifted) {
+  /**
+   * Put back the guests of `spot`, or every guest when called with no argument.
+   *
+   * Scoped by owner because a settle timer can fire while a DIFFERENT pane has
+   * already started its own press: a global restore would pull that pane's button
+   * home mid-rotation, which is the same flash seen from the other end.
+   */
+  const restoreFixedGuests = (spot?: HTMLElement): void => {
+    for (const [guest, home] of [...lifted]) {
+      if (spot !== undefined && home.owner !== spot) continue
+      lifted.delete(guest)
       // React may have torn the row down while the pointer was inside; a node with
       // no home any more is simply dropped instead of being re-inserted.
       if (home.parent.isConnected) home.parent.insertBefore(guest, home.next)
       else guest.remove()
     }
-    lifted.clear()
   }
 
   /** Ease a pressed pane back to neutral, then drop the inline transform. */
@@ -261,8 +279,10 @@ export function startSpotlight(): () => void {
       spot.style.removeProperty('transform-origin')
       void spot.offsetWidth
       spot.style.removeProperty('transition')
-      // The guests only need lifting while a transform is live.
-      restoreFixedGuests()
+      // Only this pane's guests: a timer can fire while another pane has already
+      // begun its own press, and a global restore would yank that pane's button
+      // home mid-rotation.
+      restoreFixedGuests(spot)
     }, SETTLE_MS)
     settle.set(spot, id)
   }
@@ -458,5 +478,8 @@ export function startSpotlight(): () => void {
         spot.style.removeProperty('transform-origin')
       }
     }
+    // A guest still parked on `<body>` would outlive the theme layer and never go
+    // home, so the whole map is flushed on teardown.
+    restoreFixedGuests()
   }
 }

@@ -268,6 +268,58 @@
   position: static;
 }
 
+/* ---------- A code block is a pane of the glass, like everything else.
+
+   The renderer paints three opaque layers stacked on each other:
+   `._08yGnG_block` fills `var(--dsw-alias-markdown-code-block)` (`#F0F5FB`
+   light / `#0D141F` dark), its `<pre>` repeats the same fill, and the shiki
+   `<code>` carries `background: var(--shiki-background)` as an INLINE style,
+   which aliases the same token again. The banner wrap on top adds
+   `var(--dsw-alias-bg-base)` — the canvas colour. Together that is a solid
+   pale slab dropped into the transcript, the one surface in the column that
+   never showed the water.
+
+   Two things are needed, and only two: the fill has to come off every one of
+   those layers, and the block has to carry its own material the way the other
+   secondary surfaces do. The token is cleared rather than restyled because the
+   same value feeds all three layers — one override, no chasing.
+
+   The inline `--shiki-background` cannot be reached by a token override: it is
+   computed on `:root` (where the shiki sheet declares it) and inherits down
+   already resolved, so `.shiki` gives up its paint with `!important` — the only
+   way past an inline style.
+
+   `md-code-block` and `shiki` are literal class names the renderer joins in by
+   hand (`ue(xt.block, 'md-code-block', …)`), which is why they survive a
+   release; they still have to pass through `:global()`, because lightningcss
+   rewrites every bare class selector in this file into `<hash>_<local>`. ---------- */
+[data-dsh-float] :global(.md-code-block) {
+  --dsw-alias-markdown-code-block: transparent;
+  --dsw-alias-bg-base: transparent;
+  --dsw-alias-markdown-code-block-banner: color-mix(in srgb, rgb(255 255 255) calc(20% * var(--dsh-aqua-frost, 1)), transparent);
+  border: 1px solid rgba(19, 45, 83, 0.12);
+  border-radius: 16px;
+  background: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.6));
+  overflow: hidden;
+}
+
+[data-dsh-float] :global(.md-code-block) :global(.shiki) {
+  background: transparent !important;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :global(.md-code-block) {
+  --dsw-alias-markdown-code-block-banner: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.16);
+  background: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
 [data-dsh-float] [data-phase='active'] [data-conversation-scroll] {
   margin-top: -95px;
   padding-top: 107px;

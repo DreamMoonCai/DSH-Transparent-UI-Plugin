@@ -108,17 +108,20 @@ describe('a third-party pane inside the workbench card', () => {
     expect(bodies).toContain('--dsw-alias-bg-layer-1: color-mix(')
   })
 
-  it('stays inside the right column', () => {
-    // The real canvas must keep its own fill, and the sidebar/centre must not
-    // inherit a cleared token because some plugin happened to mount there.
+  it('never clears the canvas colour globally', () => {
+    // The real canvas must keep its fill. Every rule that clears the token has
+    // to be a glass surface's own scope — the workbench pane or a card inside
+    // the transcript — and float mode only, so compat mode is untouched.
     const selectors = all
-      .filter(rule => rule.body.includes('--dsw-alias-bg-base: transparent'))
+      .filter(rule => /--dsw-alias-bg-base:\s*transparent/.test(rule.body))
       .map(rule => rule.selector)
     expect(selectors.length).toBeGreaterThan(0)
     for (const selector of selectors) {
-      expect(selector).toContain('[data-dsh-details]')
+      const scoped = selector.includes('[data-dsh-details]') || selector.includes('md-code-block')
+      expect(scoped, `unscoped canvas clear: ${selector}`).toBe(true)
       expect(selector).toContain('[data-dsh-float]')
       expect(selector).not.toContain('[data-dsh-compat]')
+      expect(selector).not.toMatch(/^\s*(html|body|:root)\b/)
     }
   })
 

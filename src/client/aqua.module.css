@@ -170,8 +170,15 @@
    swallow every click meant for the page underneath. The spotlight instead
    measures the panel when one is mounted — see `visualRect`/`glassLocalRect` in
    `spot-core.ts` — which needs nothing from the layout. `overflow: visible`
-   above is what lets the glow paint outside the card's own box. */
-[data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen']) {
+   above is what lets the glow paint outside the card's own box.
+
+   Every rule in this block is gated on `data-sidebar-right-open`, which the host
+   sets on the panel only while it is presented. A fullscreen panel that has been
+   collapsed stays mounted — the host hides its docked cells and slides them out,
+   but the panel box itself remains at `100vw` — so an ungated rule left a
+   full-viewport frosted sheet over the page after closing, the "遮罩" in the
+   screenshots. Closed means closed. */
+[data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]) {
   position: relative;
   z-index: 41;
   margin: 0;
@@ -183,7 +190,7 @@
   background: transparent;
 }
 
-[data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen'])::before {
+[data-dsh-float] [data-dsh-details]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open])::before {
   display: none;
 }
 
@@ -195,12 +202,12 @@
    the frame is meant to be visible in this presentation, so the card drops its
    fill and its ring for as long as the panel is out. The stock collapse still
    owns the column's width, so closing fullscreen restores everything as it was. */
-[data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen']) [class*='sidebarCol'] {
+[data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]) [class*='sidebarCol'] {
   border-color: transparent;
   box-shadow: none;
 }
 
-[data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen']) [class*='sidebarCol']::before {
+[data-dsh-float] [data-dsh-frame]:has([data-sidebar-right-panel='fullscreen'][data-sidebar-right-open]) [class*='sidebarCol']::before {
   display: none;
 }
 
@@ -222,20 +229,32 @@
    `position` stays the host's. It owns the panel's geometry
    (`absolute; top: 0; right: 0; bottom: 0`); a `relative` from this sheet would
    drop it back into the column's flow. */
-[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] {
   z-index: 40;
   background: var(--dsh-aqua-glass-card-light);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px)) saturate(1.15);
 }
-[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
+
+/* On Windows the host does not let this page reach the sidebar: it keeps
+   `max-width: calc(100vw - var(--dsh-windows-sidebar-width))` so the caption
+   controls stay clickable, and it rounds the first docked pane's top-left
+   corner with `--dsh-windows-content-radius`. The fill above is painted on the
+   PANEL — a plain rectangle — so it squared off that corner and left a wedge of
+   glass outside it, which is the notch in the screenshots. The panel takes the
+   same corner so its own paint follows the pane's. */
+[data-dsh-float][data-windows-titlebar] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] {
+  border-top-left-radius: var(--dsh-windows-content-radius, 16px);
+  corner-shape: round;
+}
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] {
   background: var(--dsh-aqua-glass-card-dark);
 }
 
 /* Everything inside the page that reaches for the canvas or a surface layer gets
    the translucent family, so rows and fields are cut from the page rather than
    stacked on it as opaque plates. */
-[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-pane-body],
-[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-host='dock'] > section {
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] [data-dockkit-pane-body],
+[data-dsh-float] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] [data-dockkit-host='dock'] > section {
   --dsw-alias-bg-base: transparent;
   --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(52% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
@@ -243,12 +262,10 @@
   --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(34% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
-[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] {
-  background: var(--dsh-aqua-glass-card-dark);
-}
 
-[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-pane-body],
-[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'] [data-dockkit-host='dock'] > section {
+
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] [data-dockkit-pane-body],
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-details] [data-sidebar-right-panel='fullscreen'][data-sidebar-right-open] [data-dockkit-host='dock'] > section {
   --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(13% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);

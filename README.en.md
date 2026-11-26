@@ -37,7 +37,7 @@ This repository forks [realhenrylan/DSH-Transparent-UI-Plugin](https://github.co
 | **Cards in the transcript** | The diff / read / terminal blocks a tool call expands, and the comparison preview that opens over a file row, all take the secondary glass; the red/green row tints stay at low density. |
 | **Fullscreen panel** | Hitting fullscreen in the right workbench makes the card step aside (no clip, no margin) and take rank 41, above the header and composer cards' 8 — the panel's own rank is trapped inside the card, so the card is what moves. The glass stays: the conversation underneath sits behind a 14px blur. The glow and the press measure the panel rather than the card, so they cover the page instead of only the right column. |
 | **Contrast fixes** | White-on-white tooltips, a switch thumb invisible in dark mode, a code block banner sliding under the header, and the 5px column jump caused by the press growing a horizontal scrollbar. |
-| **Tests** | 7 files / 52 checks → 31 files / 291 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
+| **Tests** | 7 files / 52 checks → 31 files / 293 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
 
 ## What the v1.5.0 baseline changed since v1.3.0
 
@@ -103,6 +103,12 @@ Chromium can remember a video file's authorization; other browsers fall back to 
 ## The look
 
 <p align="center">
+  <img src="assets/gallery-workbench.webp" alt="Driftglass with the workbench in fullscreen: a GitHub panel filling the page, its glass ranked above the titlebar and the composer" width="100%">
+</p>
+
+*The right workbench in fullscreen: the panel takes the whole page, the glass ranks above the titlebar and the composer, and the conversation sits behind a 14px blur.*
+
+<p align="center">
   <img src="assets/gallery-light.webp" alt="Driftglass in light mode over the pale teal fluid backdrop" width="100%">
 </p>
 
@@ -122,7 +128,7 @@ The composer and statistics line share one pane of glass, so the divider lands e
 | **Typography** | Space Grotesk for Latin and digits, a serif CJK face for body and display (Noto Serif SC, Songti/STSong, SimSun), serif headings and conversation tree, and a 14/10/8px radius language. |
 | **One switch** | Turn the theme off and the stock UI comes back; uninstall removes the layer with the plugin. |
 | **Multi-window** | Settings stay in sync when more than one window is open. |
-| **Tested** | 291 checks across 31 files: package contract, appearance, backdrops, panels, wallpaper selection, hover cards, the transcript block cards, the terminal and code blocks, and the fullscreen panel. |
+| **Tested** | 293 checks across 31 files: package contract, appearance, backdrops, panels, wallpaper selection, hover cards, the transcript block cards, the terminal and code blocks, and the fullscreen panel. |
 
 ## Controls
 

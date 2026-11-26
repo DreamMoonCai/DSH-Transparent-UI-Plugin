@@ -41,7 +41,7 @@ const all = rules()
 
 /** Rules that step the card itself out of the way. */
 const CARD = (selector: string) =>
-  selector.includes(':has([data-sidebar-right-panel=\'fullscreen\'])') &&
+  selector.includes(':has([data-sidebar-right-panel=\'fullscreen\'') &&
   !selector.includes(':before') &&
   !selector.includes('::before')
 
@@ -52,6 +52,20 @@ const PANEL = (selector: string) =>
   !selector.includes('::before')
 
 describe('the workbench panel in fullscreen', () => {
+  it('only applies while the panel is actually presented', () => {
+    // A fullscreen panel that has been collapsed stays mounted — the host hides
+    // its docked cells and slides them out, but the panel box itself remains at
+    // `100vw`. Ungated, the glass stayed painted after closing and left a
+    // full-viewport frosted sheet over the page.
+    const touched = all
+      .filter(rule => rule.selector.includes("[data-sidebar-right-panel='fullscreen']"))
+      .filter(rule => rule.selector.includes('[data-dsh-float]'))
+      .map(rule => rule.selector)
+    expect(touched.length).toBeGreaterThan(0)
+    for (const selector of touched) {
+      expect(selector, selector).toContain('[data-sidebar-right-open]')
+    }
+  })
   it('lets the panel out of the card', () => {
     // The host grows the panel to `calc(100vw + 1px)` and relies on its own
     // `.rightbarCol { overflow: visible }`. This card clips, so the widened
@@ -76,9 +90,25 @@ describe('the workbench panel in fullscreen', () => {
     expect(bodies).toMatch(/isolation:\s*isolate/)
   })
 
+  it('follows the corner the host rounds on Windows', () => {
+    // On Windows the host keeps the page clear of the caption controls with
+    // `max-width: calc(100vw - var(--dsh-windows-sidebar-width))` and rounds
+    // only the first docked PANE inside the panel. The panel itself is a plain
+    // rectangle, so the glass painted on it squared that corner off and left a
+    // wedge outside the pane's curve — the notch in the screenshots. The panel
+    // takes the same corner, from the host's own token.
+    const bodies = all
+      .filter(rule => rule.selector.includes("[data-sidebar-right-panel='fullscreen']"))
+      .filter(rule => rule.selector.includes('[data-windows-titlebar]'))
+      .map(rule => rule.body)
+      .join(' ')
+    expect(bodies).toMatch(/border-top-left-radius:\s*var\(--dsh-windows-content-radius/)
+    expect(bodies).toMatch(/corner-shape:\s*round/)
+  })
+
   it('hides its own glass while the panel is out', () => {
     const bodies = all
-      .filter(rule => rule.selector.includes(":has([data-sidebar-right-panel='fullscreen'])") && rule.selector.includes('::before'))
+      .filter(rule => rule.selector.includes(':has([data-sidebar-right-panel=\'fullscreen\'') && rule.selector.includes('::before'))
       .map(rule => rule.body)
       .join(' ')
     expect(bodies).toMatch(/display:\s*none/)

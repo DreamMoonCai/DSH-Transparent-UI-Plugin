@@ -11,10 +11,10 @@ import { describe, expect, it } from 'vitest'
  *    `background-color: var(--dsw-alias-markdown-inline-code)` — `neutral-50`, an
  *    opaque warm grey — plus `border: .5px solid var(--dsw-alias-border-l1)`.
  *    On the glass that reads as a small grey ticket stuck to the page.
- * 2. The conversation view tabs (对话 / 轨迹). They are plain
- *    `button[role='tab']` inside `[data-conversation-tabs]`, drawn with nothing
- *    but a 2px underline under the open one, so on a glass column the two words
- *    float with a link's hairline instead of reading as a switch.
+ * 2. The 查看 pill a tool call shows at its foot. It is
+ *    `button[class*='inspectButton']` painted
+ *    `background: var(--dsw-alias-bg-base)` — the canvas colour, opaque — inside
+ *    a 999px capsule with a hairline, so it reads as a chip of paper.
  */
 const css = readFileSync(resolve(__dirname, '../src/client/aqua.module.css'), 'utf8')
 const flat = css.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -50,10 +50,6 @@ function rules(): Rule[] {
 }
 
 const all = rules()
-
-function rulesFor(needle: string): Rule[] {
-  return all.filter(rule => rule.selector.includes(needle))
-}
 
 describe('the inline code chip is a pane of the same glass', () => {
   const chips = all.filter(rule => /:not\(pre\)\s*>\s*code/.test(rule.selector))
@@ -91,43 +87,39 @@ describe('the inline code chip is a pane of the same glass', () => {
   })
 })
 
-describe('the conversation view tabs are a switch, not a link', () => {
-  const tabs = rulesFor("[data-conversation-tabs] > [role='tab']")
+describe('the 查看 pill is a pane of the glass too', () => {
+  const pills = all.filter(rule => rule.selector.includes("button[class*='inspectButton']"))
 
-  it('keys off the component attribute, not the hashed class', () => {
-    expect(tabs.length).toBeGreaterThan(0)
-    for (const rule of tabs) {
-      expect(rule.selector, rule.selector).toContain('data-conversation-tabs')
+  it('matches the stem the host keeps across releases', () => {
+    expect(pills.length).toBeGreaterThan(0)
+    for (const rule of pills) {
+      expect(rule.selector, rule.selector).toContain('[data-dsh-float]')
     }
-    // The class is a CSS-module hash (`an3WzG_viewTabs`) that moves each release.
-    expect(flat).not.toMatch(/an3WzG_/)
-  })
-
-  it('gives the open tab a raised pane', () => {
-    const selected = all.filter(
-      rule => rule.selector.includes('data-conversation-tabs') && rule.selector.includes("aria-selected='true'"),
-    )
-    expect(selected.length).toBeGreaterThan(0)
-    const bodies = selected.map(rule => rule.body).join(' ')
-    expect(bodies).toMatch(/background:\s*color-mix/)
-    expect(bodies).toMatch(/box-shadow:\s*[\s\S]*inset 0 1px 0 rgba\(255, 255, 255/)
-  })
-
-  it('answers the pointer on the closed ones', () => {
-    const hover = all.filter(
-      rule => rule.selector.includes('data-conversation-tabs') && rule.selector.includes(':hover'),
-    )
-    expect(hover.length).toBeGreaterThan(0)
-    expect(hover.map(rule => rule.body).join(' ')).toMatch(/background:\s*color-mix/)
-  })
-
-  it('has a dark counterpart', () => {
-    for (const rule of [...tabs, ...all.filter(r => r.selector.includes('data-conversation-tabs'))]) {
-      if (rule.selector.includes('data-ds-dark-theme')) continue
-      const dark = all.some(
-        other => other.selector.includes('data-ds-dark-theme') && other.selector.includes(rule.selector.split(' [data-conversation-tabs]')[0]),
-      )
-      expect(dark, rule.selector).toBe(true)
+    // The hashes move; the stem does not. The rule must key off the stem alone —
+    // pinning a hash would break on the next host build.
+    for (const match of flat.matchAll(/\[class\*='([^']+)'\]/g)) {
+      if (match[1].includes('inspect')) expect(match[1]).toBe('inspectButton')
     }
+  })
+
+  it('does not plate the icon-only and link-shaped siblings', () => {
+    // `M4PAiq_inspect` is a 24px borderless icon button and `YcWBLa_inspect` is
+    // styled as a link; a fill on either would change their shape, not their
+    // material.
+    expect(flat).not.toMatch(/\[class\*='_inspect'\]/)
+  })
+
+  it('gives it the frost fill and keeps the host shape', () => {
+    const bodies = pills.map(rule => rule.body).join(' ')
+    expect(bodies).toMatch(/background:\s*color-mix\(in srgb, rgb\(255 255 255\)/)
+    expect(bodies).toMatch(/background:\s*color-mix\(in srgb, rgb\(226 236 250\)/)
+    // Shape, padding and the hover-reveal opacity belong to the host.
+    expect(bodies).not.toMatch(/border-radius/)
+    expect(bodies).not.toMatch(/padding/)
+    expect(bodies).not.toMatch(/opacity:\s*[01]/)
+
+    // The reveal itself must survive: the pill is invisible until the row is
+    // hovered, and something has to carry that.
+    expect(pills.some(rule => /opacity 100ms/.test(rule.body))).toBe(true)
   })
 })

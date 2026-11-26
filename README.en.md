@@ -6,7 +6,7 @@ English | [中文](README.md)
 
 <p align="center">
   <img alt="DSH 0.2.3-alpha.2" src="https://img.shields.io/badge/DSH-0.2.3--alpha.2-0f766e?style=flat-square">
-  <img alt="Version 1.6.2" src="https://img.shields.io/badge/version-1.6.2-0b3b4a?style=flat-square">
+  <img alt="Version 1.6.3" src="https://img.shields.io/badge/version-1.6.3-0b3b4a?style=flat-square">
   <img alt="AGPL-3.0 license" src="https://img.shields.io/badge/license-AGPL--3.0-0f766e?style=flat-square">
   <img alt="Desktop and Web" src="https://img.shields.io/badge/platform-Desktop%20%2B%20Web-134e4a?style=flat-square">
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img alt="powered by dsh" src="https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white"></a>
@@ -37,7 +37,10 @@ This repository forks [realhenrylan/DSH-Transparent-UI-Plugin](https://github.co
 | **Cards in the transcript** | The diff / read / terminal blocks a tool call expands, and the comparison preview that opens over a file row, all take the secondary glass; the red/green row tints stay at low density. |
 | **Fullscreen panel** | Hitting fullscreen in the right workbench makes the card step aside (no clip, no margin) and take rank 41, above the header and composer cards' 8 — the panel's own rank is trapped inside the card, so the card is what moves. The glass stays: the conversation underneath sits behind a 14px blur. The glow and the press measure the panel rather than the card, so they cover the page instead of only the right column. |
 | **Contrast fixes** | White-on-white tooltips, a switch thumb invisible in dark mode, a code block banner sliding under the header, and the 5px column jump caused by the press growing a horizontal scrollbar. |
-| **Tests** | 7 files / 52 checks → 35 files / 316 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
+| **Small plates in prose** | The inline code chip was an opaque `neutral-50` plate with a hairline, and the 查看 pill at the foot of a tool call was painted with the canvas colour; both take the frost family now, and the pill keeps the host's radius, padding and hover reveal. |
+| **Glow reaching the edge** | The glow overlay should fill its pane through `inset: 0`, but a main panel's `.page > *` pins it to `max-width: 960px` — the light stopped on a line down the middle, and past that line the cursor fell outside the element and lit nothing. It takes `width: auto` back; the radius stays at 180px. |
+| **Press inside its margin** | The press's travel scales with the pane's width, so a wide pane threw its edge tens of pixels into the frame's clip and came back as a straight cut. The angle and the scale now share one budget: a card keeps its gesture, and a wide pane gets the same one at a magnitude its geometry can hold. |
+| **Tests** | 7 files / 52 checks → 37 files / 333 checks, covering every seam, the scope of every recipe, and the invariant that switching the theme off restores the stock UI exactly. |
 
 ## What the v1.5.0 baseline changed since v1.3.0
 
@@ -128,7 +131,7 @@ The composer and statistics line share one pane of glass, so the divider lands e
 | **Typography** | Space Grotesk for Latin and digits, a serif CJK face for body and display (Noto Serif SC, Songti/STSong, SimSun), serif headings and conversation tree, and a 14/10/8px radius language. |
 | **One switch** | Turn the theme off and the stock UI comes back; uninstall removes the layer with the plugin. |
 | **Multi-window** | Settings stay in sync when more than one window is open. |
-| **Tested** | 316 checks across 35 files: package contract, appearance, backdrops, panels, wallpaper selection, hover cards, the transcript block cards, the terminal and code blocks, and the fullscreen panel. |
+| **Tested** | 333 checks across 37 files: package contract, appearance, backdrops, panels, wallpaper selection, hover cards, the transcript block cards, the terminal and code blocks, and the fullscreen panel. |
 
 ## Controls
 

@@ -89,9 +89,6 @@ describe('the workbench tab strip is left alone', () => {
   it('does not touch a tab inside a dockkit strip', () => {
     for (const match of flat.matchAll(/[^{}]*\[role='tab'\][^{}]*\{/g)) {
       if (match[0].includes('data-dockkit-strip')) continue
-      // The conversation's 对话 / 轨迹 row is its own control (see
-      // tests/prose-surfaces.test.ts), keyed off the component attribute.
-      if (match[0].includes('data-conversation-tabs')) continue
       // Any other tab rule must be scoped through the tablist guard.
       expect(match[0]).toContain("[role='tablist']")
     }

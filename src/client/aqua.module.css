@@ -2093,6 +2093,57 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
+/* ---------- The 查看 pill inside a tool call.
+
+   Every tool call that can be opened in the trace renders one small capsule at
+   its foot — `row.inspect`, labelled 查看 — and the host draws it as a real
+   surface: `border: .5px solid var(--dsw-alias-border-l3)` on
+   `background: var(--dsw-alias-bg-base)`, the canvas colour, which this theme
+   resolves to an opaque `#F4F8FD`. It is pill-shaped (999px, `corner-shape:
+   round`) and 11px, so the plate reads as a chip of paper stuck to the glass.
+
+   It takes the secondary-glass recipe the rest of the app's capsules already
+   use, at a size that suits an 11px affordance: the frost fill, a top highline,
+   a hairline in the page's ink, and a lift under the pointer. The shape, the
+   padding, the hover-reveal opacity and the focus ring all stay the host's —
+   only the paint changes.
+
+   The seam is the class stem: the host ships three hashed variants with it
+   (`hKdVjq_inspectButton` in the tool row, `cr4P6W_inspectButton` in the bash
+   row, `iJmaOG_inspectButton` in the skill row), one per package, and the stem
+   is the only part that does not move between releases. The sibling `*_inspect`
+   classes are deliberately NOT matched: `M4PAiq_inspect` is a 24px icon-only
+   button with no border and a transparent fill, and `YcWBLa_inspect` is a
+   text-styled link, so a plate on either would be a change of shape rather than
+   of material. ---------- */
+[data-dsh-float] button[class*='inspectButton'] {
+  background: color-mix(in srgb, rgb(255 255 255) calc(46% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(19, 45, 83, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
+  transition: opacity 100ms ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+[data-dsh-float] button[class*='inspectButton']:hover {
+  background: color-mix(in srgb, rgb(255 255 255) calc(62% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    0 1px 3px rgba(19, 45, 83, 0.1);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] button[class*='inspectButton'] {
+  background: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
+  border-color: rgba(148, 180, 220, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] button[class*='inspectButton']:hover {
+  background: color-mix(in srgb, rgb(226 236 250) calc(14% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 1px 3px rgba(2, 6, 14, 0.3);
+}
+
 /* ---------- The inline code chip.
 
    Every `like this` in the transcript is `:not(pre) > code` inside the markdown
@@ -2477,57 +2528,6 @@ html[data-dsh-float][data-dsh-aqua] body[data-ds-dark-theme] :not(pre) > code {
 [data-dsh-float] [role='tablist']:not([data-dockkit-strip]):has(> span[aria-hidden='true']) > [role='tab'] {
   background: transparent;
 }
-
-/* ---------- The conversation view tabs: 对话 / 轨迹.
-
-   This is the other kind of tab row — the conversation header's own. The host
-   renders `[role='tablist'][data-conversation-tabs]` holding one plain
-   `button[role='tab']` per view, and marks the open one with a 2px underline
-   drawn on `::after`. No tray, no indicator: on the glass column that left the
-   two words floating with a hairline under one of them, which reads as a link
-   rather than as the switch it is.
-
-   They take the same secondary-glass pane as the guide capsules and the
-   segmented track, so the two tab rows in the app finally look like the same
-   control. The container is the hook, not the class: the class list is a
-   CSS-module hash (`an3WzG_viewTabs`) that moves every release, while
-   `data-conversation-tabs` is written by the component. The underline is kept on
-   the open tab as the accent mark on top of the pane — it is the host's own way
-   of saying which view is open, and it stays legible over a translucent fill. */
-[data-dsh-float] [data-conversation-tabs] > [role='tab'] {
-  border-radius: 10px;
-  background: transparent;
-  box-shadow: none;
-  transition: background 0.18s ease, box-shadow 0.18s ease;
-}
-
-[data-dsh-float] [data-conversation-tabs] > [role='tab']:hover {
-  background: color-mix(in srgb, rgb(255 255 255) calc(42% * var(--dsh-aqua-frost, 1)), transparent);
-  box-shadow: inset 0 0 0 1px rgba(19, 45, 83, 0.08);
-}
-
-[data-dsh-float] [data-conversation-tabs] > [role='tab'][aria-selected='true'] {
-  background: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 0 0 1px rgba(19, 45, 83, 0.1),
-    0 1px 3px rgba(19, 45, 83, 0.08);
-  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.4));
-}
-
-[data-dsh-float] body[data-ds-dark-theme] [data-conversation-tabs] > [role='tab']:hover {
-  background: color-mix(in srgb, rgb(226 236 250) calc(10% * var(--dsh-aqua-frost, 1)), transparent);
-  box-shadow: inset 0 0 0 1px rgba(148, 180, 220, 0.12);
-}
-
-[data-dsh-float] body[data-ds-dark-theme] [data-conversation-tabs] > [role='tab'][aria-selected='true'] {
-  background: color-mix(in srgb, rgb(226 236 250) calc(14% * var(--dsh-aqua-frost, 1)), transparent);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 0 0 1px rgba(148, 180, 220, 0.16),
-    0 1px 3px rgba(2, 6, 14, 0.28);
-}
-
 
 /* ---------- Sidebar: the selected session gets an accent bar and a soft halo. ---------- */
 /* The bar reads the business-blue token directly: active-accent is a tint now

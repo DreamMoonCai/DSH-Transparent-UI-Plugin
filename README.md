@@ -6,7 +6,7 @@
 
 <p align="center">
   <img alt="DSH 0.2.3-alpha.2" src="https://img.shields.io/badge/DSH-0.2.3--alpha.2-0f766e?style=flat-square">
-  <img alt="版本 1.6.2" src="https://img.shields.io/badge/version-1.6.2-0b3b4a?style=flat-square">
+  <img alt="版本 1.6.3" src="https://img.shields.io/badge/version-1.6.3-0b3b4a?style=flat-square">
   <img alt="AGPL-3.0 许可" src="https://img.shields.io/badge/license-AGPL--3.0-0f766e?style=flat-square">
   <img alt="Desktop 与 Web" src="https://img.shields.io/badge/platform-Desktop%20%2B%20Web-134e4a?style=flat-square">
   <a href="https://github.com/deepseek-ai/deepseek-harness"><img alt="powered by dsh" src="https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white"></a>
@@ -37,7 +37,10 @@ Driftglass 是一个 fork 链的末端：[WYH66666666 的 Aqua v1.3.0](https://g
 | **对话里的卡片** | 工具调用展开后的 diff / read / 终端块，以及悬停文件行弹出的对比预览，都换成二级玻璃；两侧的红绿底色保留但压到低浓度。 |
 | **全屏面板** | 右侧工作台点全屏后，卡片让位（不裁剪、不留边距），并以 41 的层级压过顶栏与输入框的 8——面板的层级关在卡片里，所以要抬的是卡片；玻璃保留，底下的会话被模糊在 14px 之后。辉光与压感也改成量面板而不是量卡片，覆盖整页而不是只覆盖右栏那一列。 |
 | **对比度修复** | 修掉了白字白底的工具提示、深色下看不见的开关滑块、被顶栏盖住的代码块表头、以及按压卡片时整列跳 5px 的横向滚动条。 |
-| **测试** | 7 个文件 52 项 → 35 个文件 316 项，覆盖每一条 seam、每一处配方的作用域，以及「关掉主题必须完全回到原生」这条不变式。 |
+| **正文里的小色块** | 行内代码 `像这样` 原本是 `neutral-50` 不透明暖灰加描边，工具调用底部那颗「查看」胶囊则铺画布色，两者都换成同族磨砂；查看胶囊的圆角、内边距、悬停才显形都留给宿主。 |
+| **辉光铺满** | 辉光层本该 `inset: 0` 铺满，但主面板的 `.page > *` 给它钉了 `max-width: 960px`，光斑到中线就被切断、右侧鼠标落在盒外完全不亮；改成 `width: auto` 收回盒子，半径仍是原来的 180px。 |
+| **压感不越界** | 按压的位移随面板宽度等比放大，宽面板会把边缘推出几十像素撞进 frame 的裁剪里，被切成直边。角度与缩放改为共用一份固定预算：小卡片保持原来的手感，宽面板按自身几何能承受的幅度缩小。 |
+| **测试** | 7 个文件 52 项 → 37 个文件 333 项，覆盖每一条 seam、每一处配方的作用域，以及「关掉主题必须完全回到原生」这条不变式。 |
 
 ## 相对 v1.3.0 的改动
 
@@ -128,7 +131,7 @@ Chromium 可以记住视频文件的授权；其他浏览器会回落到本地�
 | **字体** | 拉丁字母和数字用 Space Grotesk，正文与展示用中日韩衬线体（Noto Serif SC、Songti/STSong、SimSun），标题和会话树用衬线，圆角语言为 14/10/8px。 |
 | **一个开关** | 关掉主题就回到原生界面；卸载插件会一起移除注入层。 |
 | **多窗口** | 打开多个窗口时设置保持同步。 |
-| **有测试** | 35 个文件共 316 项检查：包契约、外观、背景、面板、壁纸选择、悬浮卡片、对话里的块卡片、终端与代码块、全屏面板。 |
+| **有测试** | 37 个文件共 333 项检查：包契约、外观、背景、面板、壁纸选择、悬浮卡片、对话里的块卡片、终端与代码块、全屏面板。 |
 
 ## 控件
 

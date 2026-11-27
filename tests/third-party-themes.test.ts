@@ -121,6 +121,22 @@ describe('the hooks survive a hash rename', () => {
     expect(line![1]).toMatch(/color-mix\(in srgb, rgb\(255 255 255\)/)
   })
 
+  it('clears the statistics wrapper the dialog body renders', () => {
+    // The sheet stayed white with every section already glass, because the
+    // wrapper they sit in is `.cm-stat` — a full-bleed plate inside the dialog,
+    // 945×963 in the reported case — painting from the same alpha-flattened
+    // pair. It is not a card, so it is cleared rather than filled: the dialog
+    // already carries the glass and a second plate would rebuild the slab.
+    const body = ruleBody(
+      "[data-dsh-float] body [role='dialog']:not([class*='backdrop']) :global(.cm-stat)"
+    )
+    expect(body).toMatch(/background:\s*transparent\s*!important/)
+    expect(body).toMatch(/--cm-surface:\s*color-mix\(in srgb, rgb\(255 255 255\)/)
+    // The treemap draws label fills and strokes from --cm-bg, so it must stay
+    // a colour rather than become transparent.
+    expect(body).not.toMatch(/--cm-bg:/)
+  })
+
   it('wraps the cost dialog class in :global() so the CSS-module pass leaves it alone', () => {
     // lightningcss rewrites every bare class selector; `dialog.cm-stat-dialog`
     // compiled to `dialog._4y1oNG_cm-stat-dialog` and stopped matching anything,

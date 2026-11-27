@@ -1899,6 +1899,28 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   border-color: rgba(148, 180, 220, 0.18);
 }
 
+/* The sheet's own body wrapper, and the one plate the list above missed.
+   `.cm-stat` is the statistics root the dialog body renders — it fills the
+   whole interior, 945×963 in one report — and it paints from the same
+   alpha-flattened pair as its sections, so giving the sections glass left the
+   wrapper underneath them an opaque slab and the sheet stayed white. It is
+   cleared rather than given the card material: it is a full-bleed container
+   inside a sheet that already carries the glass, and stacking a second card on
+   it would just rebuild the slab at a slightly different tone. Transparent
+   lets the dialog's own material be what is seen. Its `--cm-surface` chips are
+   re-pointed one step, because they would otherwise keep the canvas colour they
+   are declared with. `--cm-bg` is left alone on purpose: the treemap uses it for
+   label fills and strokes, and a transparent value would erase them. */
+[data-dsh-float] body [role='dialog']:not([class*='backdrop']) :global(.cm-stat) {
+  --cm-surface: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  background: transparent !important;
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) :global(.cm-stat) {
+  --cm-surface: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  background: transparent !important;
+}
+
 /* Popovers that hang OFF a control inside a sheet — the archive manager's date
    picker is one (`.dsham_datePopover`, `position: absolute`, filled from
    layer-1). Re-pointing layer-1 made it translucent but not glass: at 52% with

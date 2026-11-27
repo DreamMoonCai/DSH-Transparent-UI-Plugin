@@ -137,6 +137,37 @@ describe('the hooks survive a hash rename', () => {
     expect(body).not.toMatch(/--cm-bg:/)
   })
 
+  it('glasses the plugin buttons that read the host elevated fill', () => {
+    // `.cm-btn` paints from `--dsw-alias-button-elevated-fill`, which resolves
+    // to #fff and that this skin never touches. The trigger mounts in the
+    // conversation header action slot, outside any dialog, so a dialog-scoped
+    // rule cannot reach it — `data-cm-display` is the plugin's own marker on
+    // that element.
+    expect(ruleBody("[data-dsh-float] :global(button.cm-btn)[data-cm-display]")).toMatch(
+      /background:\s*var\(--dsh-aqua-glass-card-light\)/
+    )
+    // The sheet's own buttons are descendants of a dialog, and the action
+    // buttons (`.primary`) keep the brand fill.
+    expect(flat).toContain(":global(.cm-btn):not(:global(.primary))")
+    expect(flat).toMatch(/\[data-cm-sidebar-card\]/)
+  })
+
+  it('names the two rows that read the canvas colour instead of clearing it', () => {
+    // `--dsw-alias-bg-base` has to stay opaque in the cost scopes: the plugin
+    // paints the platform's select dropdown with `rgb(from … / 1)` off that
+    // token, and a translucent value renders that list on black. So the two
+    // rows that read it are named, and no cost-scoped rule clears the token.
+    expect(flat.indexOf(":global(.cm-pricing-nav-item.active)")).toBeGreaterThan(-1)
+    const costScopes = [
+      "[data-dsh-float] :is(",
+      "[data-dsh-float] body [role='dialog']:not([class*='backdrop']) :global(.cm-stat)",
+    ]
+    for (const scope of costScopes) {
+      const body = ruleBody(scope)
+      expect(body).not.toMatch(/--dsw-alias-bg-base:\s*transparent/)
+    }
+  })
+
   it('wraps the cost dialog class in :global() so the CSS-module pass leaves it alone', () => {
     // lightningcss rewrites every bare class selector; `dialog.cm-stat-dialog`
     // compiled to `dialog._4y1oNG_cm-stat-dialog` and stopped matching anything,

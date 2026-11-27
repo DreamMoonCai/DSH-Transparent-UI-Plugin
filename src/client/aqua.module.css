@@ -1921,6 +1921,78 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background: transparent !important;
 }
 
+/* The plugin's own buttons and fields read three host tokens this skin does not
+   touch anywhere else, so clearing the sheet's layer family left them white:
+   `--dsw-alias-button-elevated-fill` on every `.cm-btn`, and
+   `--dsw-alias-bg-base` on `.cm-input` and the active pricing nav row.
+
+   The trigger button is NOT inside a dialog — the plugin mounts it in the
+   conversation header's action slot (`data-cm-display="session-header"`), so a
+   dialog-scoped rule never reaches it. Both mounts are covered: `data-cm-*` on
+   the plugin's own elements for the header and the sidebar card, and the dialog
+   scope for everything rendered inside the sheet.
+
+   `--dsw-alias-bg-base` stays opaque in these scopes on purpose:
+   `.cm-input:is(select) :is(option, optgroup)` paints the platform's own
+   dropdown list from it through `rgb(from … r g b / 1)`, and a translucent
+   value there makes that list render on black. The two rows that read it are
+   named instead. */
+[data-dsh-float] :is(
+  [role='dialog']:not([class*='backdrop']),
+  [data-cm-display],
+  [data-cm-sidebar-card]
+) :global(.cm-btn):not(:global(.primary)) {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(19, 45, 83, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is(
+  [role='dialog']:not([class*='backdrop']),
+  [data-cm-display],
+  [data-cm-sidebar-card]
+) :global(.cm-btn):not(:global(.primary)) {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(148, 180, 220, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* The header trigger IS the `data-cm-display` element, so it is not a
+   descendant of one. */
+[data-dsh-float] :global(button.cm-btn)[data-cm-display] {
+  background: var(--dsh-aqua-glass-card-light);
+  border-color: rgba(19, 45, 83, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :global(button.cm-btn)[data-cm-display] {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(148, 180, 220, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-dsh-float] :is(
+  [role='dialog']:not([class*='backdrop']),
+  [data-cm-display],
+  [data-cm-sidebar-card]
+) :is(
+  :global(.cm-input),
+  :global(.cm-pricing-nav-item.active)
+) {
+  background: color-mix(in srgb, rgb(255 255 255) calc(26% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] :is(
+  [role='dialog']:not([class*='backdrop']),
+  [data-cm-display],
+  [data-cm-sidebar-card]
+) :is(
+  :global(.cm-input),
+  :global(.cm-pricing-nav-item.active)
+) {
+  background: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
 /* Popovers that hang OFF a control inside a sheet — the archive manager's date
    picker is one (`.dsham_datePopover`, `position: absolute`, filled from
    layer-1). Re-pointing layer-1 made it translucent but not glass: at 52% with

@@ -82,19 +82,21 @@ describe('the thumb catches the light', () => {
   })
 })
 
-describe('the track stays clear', () => {
-  it('never paints a groove on hover', () => {
-    // `*:hover` matches every ancestor of the element under the pointer, so one
-    // pointer lit the row's scroller, its page body and the frame together.
-    // A track paints at full height, so those stacked into several parallel
-    // full-height bands inside the right edge; the press' tilt sheared them.
-    expect(flat).not.toMatch(/\*:hover::-webkit-scrollbar-track/)
+describe('the track only appears under the pointer', () => {
+  it('stays a lone pill at rest', () => {
+    // No unconditional track rule: at rest the bar is one pill, which is what
+    // makes it read as the glass being thicker there.
+    expect(flat).not.toMatch(/\[data-dsh-aqua\] ::-webkit-scrollbar-track \{/)
   })
 
-  it('pins the track transparent so no band can appear', () => {
-    const track = blockOf('[data-dsh-aqua] ::-webkit-scrollbar-track')
+  it('reveals a groove on the hovered surface', () => {
+    const track = blockOf('[data-dsh-aqua] *:hover::-webkit-scrollbar-track')
     expect(track).not.toBeNull()
-    expect(track).toMatch(/background:\s*transparent/)
+    expect(track).toMatch(/color-mix\(in srgb/)
+  })
+
+  it('carries a dark groove', () => {
+    expect(flat).toContain('[data-dsh-aqua] body[data-ds-dark-theme] *:hover::-webkit-scrollbar-track')
   })
 })
 

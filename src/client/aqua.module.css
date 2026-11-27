@@ -2555,59 +2555,19 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   background-color: var(--dsh-scrollbar-thumb-hover);
 }
 
-/* The track is pinned clear instead of being revealed on hover. A groove used to
-   be drawn through `*:hover`, but that pseudo-class matches EVERY ancestor of the
-   element under the pointer, so one pointer lit the track of the row's scroller,
-   its page body and the frame at once. A track paints at full height, so those
-   stacked into several parallel full-height bands a few pixels apart inside the
-   right edge, and the press' tilt sheared them apart — which is what read as a
-   scrollbar appearing out of nowhere at the card's right. The thumb alone
-   already reads as thickness in the glass, so no groove is needed. */
-[data-dsh-aqua] ::-webkit-scrollbar-track {
-  background: transparent;
+/* A groove only while the pointer is over the surface that owns it: at rest the
+   bar is a lone pill, which is what keeps it reading as thickness in the glass. */
+[data-dsh-aqua] *:hover::-webkit-scrollbar-track {
+  background: color-mix(in srgb, rgb(19 45 83) calc(5% * var(--dsh-aqua-frost, 1)), transparent);
+  border-radius: 999px;
+}
+
+[data-dsh-aqua] body[data-ds-dark-theme] *:hover::-webkit-scrollbar-track {
+  background: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 /* Both bars meeting in a corner keep the transparent track rather than the UA's
    opaque default. */
-[data-dsh-aqua] ::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* Styling any `::-webkit-scrollbar-*` part switches Chromium from the native
-   overlay bar to a custom one, and a custom bar on Windows is drawn WITH the up
-   and down arrow buttons. They never appear in the native overlay bar, so they
-   read as a foreign control bolted onto the glass — most visibly when a pane
-   grows against its container and the bar shows for a moment. Suppressing the
-   buttons keeps a bar to the one thing this skin wants there: the pill. */
-[data-dsh-aqua] ::-webkit-scrollbar-button {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-/* `--dsw-alias-bg-layer-3` is a SURFACE token by name but the host also reads it
-   as INK: five rules paint `background: var(--dsw-alias-label-primary)` and then
-   `color: var(--dsw-alias-bg-layer-3)`, i.e. white text on ink. The stock theme
-   makes that correct by keeping layer-3 opaque (`#fff` light). This skin turns
-   every layer token translucent so surfaces read as glass, and those five
-   inverted labels went with it — the alpha that makes a background see-through
-   makes the text see-through too, so an in-use tag, a broken-plugin badge, its
-   hover tip and the save button all rendered as near-black chips.
-
-   Pinning layer-3 back to opaque is not an option (25 rules paint surfaces with
-   it), so the inverted carriers get the ink they were written against. The
-   `body` in the selector is load-bearing: the host's own
-   `.URJjCq_tag[data-tone=solid]` is (0,2,0) and its sheet is injected after
-   ours, so an equal-weight rule loses the tie and the label stayed dark. One
-   element selector tips it to (0,2,1). */
-[data-dsh-float] body [data-tone='solid'],
-[data-dsh-float] body [class*='brokenBadge'],
-[data-dsh-float] body [class*='brokenTip'],
-[data-dsh-float] body [class*='iconButton'][data-tip]::after,
-[data-dsh-float] body button[class*='_save'] {
-  color: var(--dsw-alias-label-primary-inverted);
-}
-
 [data-dsh-aqua] ::-webkit-scrollbar-corner {
   background: transparent;
 }

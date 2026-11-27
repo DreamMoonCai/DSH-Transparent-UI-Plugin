@@ -643,6 +643,33 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
+/* A context injection's expanded body is the transcript's one remaining opaque
+   plate. It is NOT a fenced code block: `ContextInjectionRow.module.css` draws
+   its own `.body` with `background: var(--dsw-alias-markdown-code-block)`, so
+   every `.md-code-block` rule passes it by and it kept whatever that token
+   resolves to. The row stamps `data-context-injection-body` on it, which is the
+   stable hook — the class is build-hashed.
+
+   It takes the same recipe the fenced block does, one step down: this sits
+   inside a disclosure row rather than being a top-level card, and it caps at
+   141px, so the plate reads as a well in the row. */
+[data-dsh-float] [data-context-injection-body] {
+  --dsw-alias-markdown-code-block: transparent;
+  background: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  border: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.44),
+    inset 0 0 0 1px rgba(19, 45, 83, 0.1);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 0.6));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-context-injection-body] {
+  background: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(148, 180, 220, 0.14);
+}
+
 [data-dsh-float] [data-phase='active'] [data-conversation-scroll] {
   margin-top: -95px;
   padding-top: 107px;
@@ -1728,6 +1755,43 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    the local class stem, which a CSS module keeps after its hash. */
 [data-dsh-float] [data-dsh-market-root] [class*='stickyHead'] {
   backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 1.2));
+}
+
+/* The market's task panel is the "任务" popover over the tab strip: a 460px
+   `position: absolute` card filled from layer-1 with a flat 12px radius and a
+   hard `#00000047` shadow. Layer-1 inside the market scope is already 48% white
+   — that is why the panel read as translucent-but-not-glass, with the cards
+   underneath showing through — but it had no blur of its own to turn what is
+   behind it into tone, so the rows underneath stayed legible as text. It hangs
+   over the page rather than sitting in it, so it takes the sticky recipe: dense
+   enough to read on, doubled blur. The class stem survives the module hash. */
+[data-dsh-float] [class*='opPanel']:not([class*='opPanelTitle']) {
+  background: var(--dsh-aqua-glass-sticky-light);
+  border-color: rgba(19, 45, 83, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 20px 52px rgba(19, 45, 83, 0.22);
+  backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 2));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [class*='opPanel']:not([class*='opPanelTitle']) {
+  background: var(--dsh-aqua-glass-sticky-dark);
+  border-color: rgba(148, 180, 220, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 20px 52px rgba(2, 6, 14, 0.55);
+}
+
+/* The rows inside are already transparent — they carry a hairline and nothing
+   else — so only the two that paint get a value: the running aggregate reads
+   layer-2, and it has to stay a step denser than the panel it sits in, or the
+   grouping it marks disappears. The alert row keeps its own red. */
+[data-dsh-float] [class*='opPanel'] [class*='opAggregate'] {
+  background: color-mix(in srgb, rgb(255 255 255) calc(26% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [class*='opPanel'] [class*='opAggregate'] {
+  background: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
 /* The cost sheet paints its own plate from layer-2, so the token above is not

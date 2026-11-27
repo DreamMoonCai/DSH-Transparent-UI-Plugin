@@ -500,6 +500,28 @@
   --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
+/* `--dsw-alias-bg-layer-3` is a SURFACE token by name but the host also reads it
+   as INK: five rules paint `background: var(--dsw-alias-label-primary)` and then
+   `color: var(--dsw-alias-bg-layer-3)`, i.e. white text on ink. The stock theme
+   keeps that correct by leaving layer-3 opaque (`#fff` light). This skin makes
+   every layer token translucent so surfaces read as glass, and those five
+   inverted labels went with it — the alpha that makes a background see-through
+   makes the text see-through too, so the in-use tag and the broken-plugin badge
+   read as near-black chips.
+
+   Pinning layer-3 back to opaque is not an option (25 rules paint surfaces with
+   it), so the inverted carriers get the ink they were written against. The `body`
+   is load-bearing: the host's own `.URJjCq_tag[data-tone=solid]` is (0,2,0) and
+   its sheet is injected after ours, so an equal-weight rule loses the tie by
+   injection order. One element selector tips it to (0,2,1). */
+[data-dsh-float] body [data-tone='solid'],
+[data-dsh-float] body [class*='brokenBadge'],
+[data-dsh-float] body [class*='brokenTip'],
+[data-dsh-float] body [class*='iconButton'][data-tip]::after,
+[data-dsh-float] body button[class*='_save'] {
+  color: var(--dsw-alias-label-primary-inverted);
+}
+
 /* The docked pane fills the card's INNER box instead of the column's border
    box. The host draws it as an absolutely positioned canvas pinned to
    right/top/bottom with an inline pixel width taken from the grid track, so
@@ -2564,6 +2586,17 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 
 [data-dsh-aqua] body[data-ds-dark-theme] *:hover::-webkit-scrollbar-track {
   background: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
+}
+
+/* Styling any `::-webkit-scrollbar-*` part switches Chromium from the native
+   overlay bar to a custom one, and a custom bar is drawn WITH the up and down
+   arrow buttons. Those never appear in the native bar, so they read as a foreign
+   control bolted onto the glass. Suppressing them keeps a bar to the one thing
+   this skin wants there: the pill. */
+[data-dsh-aqua] ::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Both bars meeting in a corner keep the transparent track rather than the UA's

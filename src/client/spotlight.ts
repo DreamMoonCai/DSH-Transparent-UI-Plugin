@@ -57,8 +57,20 @@ const TILT_MAX = 0.0175
 /** Tilt perspective distance, px (official value). */
 const TILT_PERSPECTIVE = 800
 
-/** The press's own scale, applied by the official card. */
-const SCALE_GROWTH = 0.01
+/**
+ * The press's own uniform scale.
+ *
+ * The official card grows by 1%. That is the only term that expands a pane in all
+ * four directions at once — it does not depend on where the pointer is and it
+ * cannot be clamped by the room the pane has, because every edge moves outward
+ * simultaneously. Rotation is different: one edge goes out while the opposite one
+ * comes in, so `TILT_LIFT_BUDGET` can hold it inside the frame.
+ *
+ * Growing past its own box is also what makes an `overflow: auto` ancestor grow a
+ * scrollbar beside the pane, which is the bar that appeared whenever a card was
+ * pressed hard enough. The gesture keeps the rotation and drops the growth.
+ */
+const SCALE_GROWTH = 0
 
 /**
  * How far an edge may travel outward during a press, px.

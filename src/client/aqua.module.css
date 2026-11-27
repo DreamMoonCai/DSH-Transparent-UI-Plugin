@@ -2210,6 +2210,44 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   color: rgb(228 236 248 / 0.92);
 }
 
+/* ---------- The task dock.
+
+   `section[data-testid='todo-panel']` sits on the same seat as the queued-message
+   dock: directly above the composer, inside its dock slot. The host paints the
+   panel root with `background: var(--dsw-specific-menu)` — the menu family's
+   70% white, tuned to sit over arbitrary page content — plus
+   `backdrop-filter: var(--dsw-menu-backdrop-filter)`. Over the composer's own
+   glass that combination reads as one more pale slab stacked on the card rather
+   than a pane of the same water. The seam is the host's `data-testid`, because
+   the module class is build-hashed and will not survive the next release.
+
+   It takes the card material, the same lift and the same 24px shoulders as the
+   fused slab, because it lands on that slab's top edge. The collapsed header is a
+   plain `button` with no fill of its own, so nothing else needs clearing. */
+[data-dsh-float] [data-testid='todo-panel'] {
+  background: var(--dsh-aqua-glass-card-light);
+  border: 1px solid rgba(19, 45, 83, 0.18);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 6px 22px rgba(19, 45, 83, 0.14);
+  backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
+}
+
+[data-dsh-float] body[data-ds-dark-theme] [data-testid='todo-panel'] {
+  background: var(--dsh-aqua-glass-card-dark);
+  border-color: rgba(148, 180, 220, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 6px 22px rgba(2, 6, 14, 0.3);
+}
+
+/* The open list scrolls inside the panel and reserves its own lane; keep the
+   thumb a lone pill rather than letting the UA draw a track inside the card. */
+[data-dsh-float] [data-testid='todo-panel'] [class*='list'] {
+  scrollbar-gutter: stable;
+}
+
 /* ---------- The queued-message dock.
 
    While the agent is running, anything typed lands in a stack that sits directly

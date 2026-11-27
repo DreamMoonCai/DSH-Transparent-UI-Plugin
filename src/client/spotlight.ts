@@ -594,7 +594,16 @@ export function startSpotlight(): () => void {
     for (const spot of spotElements()) {
       const dialog = spot.matches(SIDEBAR_COLUMN) && spot.querySelector('[role="dialog"]') !== null
       const floated = spot.matches(RIGHTBAR_COLUMN) && spot.querySelector(FLOATING_PANE) !== null
-      if (!dialog && !floated) continue
+      // A sheet's dropdown is the third guest that mounts after the pane. The
+      // press guard in `tiltable` only runs on `pointermove`, and opening a
+      // picker is a CLICK: no pointer moves, so the sheet kept the transform it
+      // was given a moment earlier and the list resolved `fixed` against it.
+      // The proxy page's mode picker is exactly this — a `position: fixed`
+      // `role='listbox'` placed from `getBoundingClientRect` — and it landed
+      // offset from its trigger, outside the panel. The keeper watches the DOM,
+      // so the release happens on the insertion that opened the list.
+      const picker = spot.matches(DIALOG) && spot.querySelector(PANEL_MENU) !== null
+      if (!dialog && !floated && !picker) continue
       spot.removeAttribute(ON_ATTR)
       const id = settle.get(spot)
       if (id !== undefined) {

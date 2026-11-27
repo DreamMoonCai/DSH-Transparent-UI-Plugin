@@ -127,6 +127,18 @@ describe('a dialog keeps its own positioning', () => {
   it('does not tilt a dialog that opened its own fixed menu', () => {
     expect(controller).toMatch(/if \(spot\.matches\(DIALOG\)\) \{[\s\S]*PANEL_MENU[\s\S]*return false/)
   })
+
+  it('releases the sheet the moment a picker opens inside it', () => {
+    // `tiltable` is consulted on `pointermove`, and opening a picker is a click,
+    // so the transform written a moment earlier stays live while the list
+    // mounts. The keeper re-checks the DOM and drops it on that insertion —
+    // otherwise the `fixed` list resolves against the sheet and lands away from
+    // its trigger.
+    const keeper = /startOverlayKeeper\(\(\) => \{([\s\S]*?)\n  \}\)/.exec(controller)
+    expect(keeper).not.toBeNull()
+    expect(keeper![1]).toMatch(/const picker = spot\.matches\(DIALOG\) && spot\.querySelector\(PANEL_MENU\) !== null/)
+    expect(keeper![1]).toMatch(/if \(!dialog && !floated && !picker\) continue/)
+  })
 })
 
 describe('the sheet paints its contents from its own material', () => {

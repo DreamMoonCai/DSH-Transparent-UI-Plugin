@@ -97,6 +97,30 @@ describe('the hooks survive a hash rename', () => {
     expect(flat).not.toMatch(/nUhMVa_/)
   })
 
+  it('also answers the portal the market moves its layers into', () => {
+    // The market's dialogs, lightbox and any floating layer are portalled into
+    // its own `div[data-dsh-market-portal]`, appended to <body> — outside the
+    // `data-dsh-market-root` subtree, so the token re-point above never reached
+    // them and those layers kept painting the opaque canvas colour.
+    expect(ruleBody('[data-dsh-float] [data-dsh-market-root],')).toMatch(
+      /--dsw-alias-settings-card-fill:/
+    )
+    expect(flat).toContain('[data-dsh-float] [data-dsh-market-portal],')
+    expect(flat).toContain('[data-dsh-float] body[data-ds-dark-theme] [data-dsh-market-portal],')
+  })
+
+  it('declares the market card fill literally instead of inheriting the alias', () => {
+    // `--dsw-alias-settings-card-fill: var(--dsw-alias-bg-layer-2)` is expanded
+    // where the theme declares it, so an opaque pixel travels down and no
+    // re-point of layer-2 reaches the card. Same reason the body block writes it
+    // out again.
+    const body = ruleBody('[data-dsh-float] [data-dsh-market-root],')
+    const line = /--dsw-alias-settings-card-fill:\s*([^;]+);/.exec(body)
+    expect(line).not.toBeNull()
+    expect(line![1]).not.toContain('var(--dsw-alias-bg-layer-2)')
+    expect(line![1]).toMatch(/color-mix\(in srgb, rgb\(255 255 255\)/)
+  })
+
   it('wraps the cost dialog class in :global() so the CSS-module pass leaves it alone', () => {
     // lightningcss rewrites every bare class selector; `dialog.cm-stat-dialog`
     // compiled to `dialog._4y1oNG_cm-stat-dialog` and stopped matching anything,

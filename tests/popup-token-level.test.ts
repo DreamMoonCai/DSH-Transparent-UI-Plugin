@@ -165,4 +165,15 @@ describe('a popover over rows is denser than a card', () => {
     expect(body).toMatch(/background:\s*var\(--dsh-aqua-glass-sticky-light\)/)
     expect(body).toMatch(/backdrop-filter:\s*blur\(calc\(var\(--dsh-aqua-blur, 14px\) \* 2\)\)/)
   })
+
+  it('does not require the popover to sit inside a dialog', () => {
+    // The archive manager's date picker hangs off a row in its own panel, which
+    // is not a `role='dialog'`. Scoping the recipe to a dialog made it miss, and
+    // the list kept the host's near-solid layer-1 plate — the "still too
+    // transparent, folded into the text behind it" report.
+    const at = flat.indexOf("[class*='datePopover']")
+    const selector = flat.slice(flat.lastIndexOf('}', at) + 1, at).trim()
+    expect(selector).not.toContain("[role='dialog']")
+    expect(selector).toContain('[data-dsh-float]')
+  })
 })

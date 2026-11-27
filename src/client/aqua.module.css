@@ -1693,11 +1693,18 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
    below — so leaving it alone costs nothing and keeps both plugins' own surfaces
    intact. ---------- */
 [data-dsh-float] [data-dsh-market-root],
+[data-dsh-float] [data-dsh-market-portal],
 [data-dsh-float] body :global(dialog.cm-stat-dialog) {
   --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(255 255 255) calc(48% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(255 255 255) calc(36% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(255 255 255) calc(26% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(255 255 255) calc(30% * var(--dsh-aqua-frost, 1)), transparent);
+  /* The market's cards and tiles read `--dsw-alias-settings-card-fill`, whose
+     body-level declaration is `var(--dsw-alias-bg-layer-2)` — expanded where it
+     is declared, so it hands down an opaque pixel and no re-point of layer-2
+     reaches it. Declared here as a literal again, the same way the body block
+     does it. */
+  --dsw-alias-settings-card-fill: color-mix(in srgb, rgb(255 255 255) calc(38% * var(--dsh-aqua-frost, 1)), transparent);
   /* The market's own sticky band would otherwise fall through to the canvas
      colour it names as a fallback. */
   --dshm-sticky-bg: color-mix(in srgb, rgb(255 255 255) calc(58% * var(--dsh-aqua-frost, 1)), transparent);
@@ -1705,11 +1712,13 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 [data-dsh-float] body[data-ds-dark-theme] [data-dsh-market-root],
+[data-dsh-float] body[data-ds-dark-theme] [data-dsh-market-portal],
 [data-dsh-float] body[data-ds-dark-theme] :global(dialog.cm-stat-dialog) {
   --dsw-alias-bg-layer-1: color-mix(in srgb, rgb(226 236 250) calc(11% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-2: color-mix(in srgb, rgb(226 236 250) calc(8% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-layer-3: color-mix(in srgb, rgb(226 236 250) calc(6% * var(--dsh-aqua-frost, 1)), transparent);
   --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
+  --dsw-alias-settings-card-fill: color-mix(in srgb, rgb(226 236 250) calc(9% * var(--dsh-aqua-frost, 1)), transparent);
   --dshm-sticky-bg: color-mix(in srgb, rgb(226 236 250) calc(13% * var(--dsh-aqua-frost, 1)), transparent);
   --dshm-stuck-bg: color-mix(in srgb, rgb(226 236 250) calc(16% * var(--dsh-aqua-frost, 1)), transparent);
 }
@@ -1722,16 +1731,26 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 /* The cost sheet paints its own plate from layer-2, so the token above is not
-   enough on its own: the dialog element itself carries the fill. It takes the
-   card material with the same 16px corner it declares. */
+   enough on its own: the dialog element itself carries the fill.
+
+   It needs `!important`, and it needs its own selector rather than a share of
+   the block below. The plugin declares the fill on `.cm-stat-dialog` twice —
+   `background: var(--dsw-alias-bg-layer-2, …)` and then
+   `background: rgb(from var(--dsw-alias-bg-layer-2, …) r g b / 1)` in a grouped
+   rule with `.cm-section` — and that relative-colour form resolves the alpha to
+   a literal `1`, so the value is an opaque pixel before any cascade question is
+   asked. Re-pointing the token cannot reach it, and neither can a rule of equal
+   weight: the sheet is portalled into the top layer, where it is the only paint
+   in its own stacking context, so anything short of importance leaves a solid
+   white plate over the page — which is exactly what it looked like. */
 [data-dsh-float] body :global(dialog.cm-stat-dialog) {
-  background: var(--dsh-aqua-glass-card-light);
+  background: var(--dsh-aqua-glass-card-light) !important;
   border-color: rgba(19, 45, 83, 0.26);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
 }
 
 [data-dsh-float] body[data-ds-dark-theme] :global(dialog.cm-stat-dialog) {
-  background: var(--dsh-aqua-glass-card-dark);
+  background: var(--dsh-aqua-glass-card-dark) !important;
   border-color: rgba(148, 180, 220, 0.32);
 }
 
@@ -1826,8 +1845,8 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 
    The hook is the class stem, which a plain (non-module) injected stylesheet
    keeps verbatim, so `:global` is not needed for a substring match. */
-[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) [class*='datePopover'],
-[data-dsh-aqua] body [role='dialog']:not([class*='backdrop']) [class*='Popover'][class*='-'] {
+[data-dsh-float] [class*='datePopover'],
+[data-dsh-float] [class*='Popover'][class*='-'] {
   background: var(--dsh-aqua-glass-sticky-light);
   border-color: rgba(19, 45, 83, 0.16);
   box-shadow:
@@ -1836,8 +1855,8 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
   backdrop-filter: blur(calc(var(--dsh-aqua-blur, 14px) * 2));
 }
 
-[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) [class*='datePopover'],
-[data-dsh-aqua] body[data-ds-dark-theme] [role='dialog']:not([class*='backdrop']) [class*='Popover'][class*='-'] {
+[data-dsh-float] body[data-ds-dark-theme] [class*='datePopover'],
+[data-dsh-float] body[data-ds-dark-theme] [class*='Popover'][class*='-'] {
   background: var(--dsh-aqua-glass-sticky-dark);
   border-color: rgba(148, 180, 220, 0.2);
   box-shadow:

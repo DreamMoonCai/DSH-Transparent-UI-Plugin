@@ -5,10 +5,12 @@
  * class is build-hashed, so the only stable hook is `data-plugin-panel` on
  * the root section — pin that seam and the card geometry here.
  *
- * Unlike the scheduled tasks page, this page owns its scroll container
- * (there is no inner pane), so the card must keep `overflow: auto`; hiding
- * the root would clip everything below the fold. The stable gutter keeps the
- * 960px content column from shifting when the installed list grows.
+ * The card does NOT scroll. The host's `.pageBody` inside the section is the
+ * scroller (`overflow: hidden auto; flex: 1; min-height: 0`), and it is the
+ * element the sticky title row measures its scroll offset against. Giving the
+ * card an axis of its own put a second bar in the same box: one at the card's
+ * reserved gutter, one at the page body's, and under the press both tilt with
+ * the card and read as two grey strips just inside the right edge.
  */
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -89,10 +91,17 @@ describe('plugin manager page card', () => {
     expect(style.boxShadow).toContain('0 10px 34px')
   })
 
-  it('keeps the page scroll container and reserves its gutter', () => {
+  it('leaves scrolling to the host page body instead of opening its own axis', () => {
+    // The card had `overflow: auto; scrollbar-gutter: stable`, which put a
+    // SECOND bar inside the same box as the host's `.pageBody` scroller. Under
+    // the press both bars tilt with the card, so they read as two grey strips
+    // inside the right edge. The card clips; the page body scrolls.
     const style = getComputedStyle(mount())
-    expect(style.overflow).toBe('auto')
-    expect(style.scrollbarGutter).toBe('stable')
+    expect(style.overflow).toBe('clip')
+    // jsdom does not compute `scrollbar-gutter`; pin it on the source rule.
+    const rule = declarationsOf('[data-dsh-float] section[data-plugin-panel] {')
+    expect(rule).not.toMatch(/scrollbar-gutter/)
+    expect(rule).not.toMatch(/overflow:\s*auto/)
   })
 
   it('flattens the page title header onto the card', () => {

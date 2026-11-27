@@ -500,6 +500,27 @@
   --dsw-alias-bg-module-platform: color-mix(in srgb, rgb(226 236 250) calc(7% * var(--dsh-aqua-frost, 1)), transparent);
 }
 
+/* `--dsw-alias-bg-layer-3` is a SURFACE token by name but the host also reads it
+   as INK: five rules paint `background: var(--dsw-alias-label-primary)` and then
+   `color: var(--dsw-alias-bg-layer-3)`, i.e. white text on ink. The stock theme
+   makes that correct by keeping layer-3 opaque (`#fff` light). This skin turns
+   every layer token translucent so surfaces read as glass, and those five
+   inverted labels went with it — the alpha that makes a background see-through
+   makes the text see-through too, so an in-use tag, a broken-plugin badge, its
+   hover tip and the save button all rendered as solid black chips.
+
+   Rather than pin layer-3 back to opaque (25 rules paint surfaces with it), give
+   the inverted consumers the ink they were written against. The seams are the
+   ones the host's own markup exposes: the `Tag` primitive's `data-tone`, and the
+   class stems the hashed CSS modules keep. */
+[data-dsh-float] [data-tone='solid'],
+[data-dsh-float] [class*='brokenBadge'],
+[data-dsh-float] [class*='brokenTip'],
+[data-dsh-float] [class*='iconButton'][data-tip]::after,
+[data-dsh-float] button[class*='_save'] {
+  color: var(--dsw-alias-label-primary-inverted);
+}
+
 /* The docked pane fills the card's INNER box instead of the column's border
    box. The host draws it as an absolutely positioned canvas pinned to
    right/top/bottom with an inline pixel width taken from the grid track, so
@@ -1540,12 +1561,17 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
 }
 
 /* ---------- Plugins: the third main panel. Same floating card recipe as
-   the scheduled tasks page, but this page owns its scroll container instead
-   of an inner pane — so it keeps `overflow: auto` (hiding the root would
-   clip everything below the fold) and reserves the gutter up front so the
-   960px column does not shift when the installed list grows. The section
-   hook is the stable seam the plugin manager renders (`data-plugin-panel`);
-   the module class is build-hashed. ---------- */
+   the scheduled tasks page. The section hook is the stable seam the plugin
+   manager renders (`data-plugin-panel`); the module class is build-hashed.
+
+   The page does NOT scroll here: the host's own `.pageBody` is the scroller
+   (`overflow: hidden auto`, `flex: 1; min-height: 0`), and it is the element
+   the sticky title row measures itself against. Giving the card a scroll axis
+   of its own put a SECOND bar inside the same box — one at the card's reserved
+   gutter and one at the page body's — and under the press both bars tilt with
+   the card, so they read as two grey strips floating just inside the right
+   edge. `clip` keeps the card a hard edge for the press' 1% growth while
+   leaving the inner scroller untouched. ---------- */
 [data-dsh-float] section[data-plugin-panel] {
   box-sizing: border-box;
   width: calc(100% - 32px);
@@ -1558,8 +1584,7 @@ html[data-dsh-float][data-dsh-aqua-wallpaper][data-dsh-aqua-media='video'] body[
     inset 0 1px 0 rgba(255, 255, 255, 0.5),
     0 10px 34px rgba(19, 45, 83, 0.16);
   backdrop-filter: blur(var(--dsh-aqua-blur, 14px));
-  overflow: auto;
-  scrollbar-gutter: stable;
+  overflow: clip;
 }
 
 [data-dsh-float] body[data-ds-dark-theme] section[data-plugin-panel] {

@@ -251,6 +251,21 @@ export function startSpotlight(): () => void {
   const lifted = new Map<HTMLElement, { parent: Node, next: Node | null, owner: HTMLElement }>()
 
   /**
+   * Scrolling ancestors clipped for the duration of a press, with their state.
+   *
+   * A press grows a pane past its own box, and a transform counts toward the
+   * scrollable overflow region of every ancestor. An ancestor whose `overflow`
+   * is `auto` therefore gains a scrollbar the moment the pane grows — a bar that
+   * appears BESIDE the card rather than on it, and that disappears again when the
+   * pointer leaves. A pane too small to overflow the ancestor shows nothing,
+   * which is why the bar only turned up on some surfaces.
+   */
+  const clipped = new Map<
+    HTMLElement,
+    { overflow: string, priority: string, top: number, left: number, owner: HTMLElement }
+  >()
+
+  /**
    * Take every fixed guest of this pane out of it.
    *
    * Keyed per guest, not guarded on the map being empty. A single global
@@ -289,6 +304,60 @@ export function startSpotlight(): () => void {
     }
   }
 
+  /**
+   * Take the scrolling ancestors out of the scrollbar business for a press.
+   *
+   * The press grows a pane past its own box, and a transform counts toward the
+   * scrollable overflow region of every ancestor. An ancestor whose `overflow`
+   * is `auto` therefore gains a scrollbar the instant the pane grows — a bar
+   * that appears next to the card, not on it, and that vanishes again when the
+   * pointer leaves and the growth goes away. A small frame does not grow enough
+   * to overflow, which is why the bar only showed on some panes.
+   *
+   * `overflow: clip` keeps the ancestor a hard edge without making it a scroll
+   * container, so no bar can be generated for the duration of the press. Any
+   * scroll offset the ancestor already had is put back on release: clipping
+   * resets it, and losing a reader's place in the transcript would be a worse
+   * bug than the one being fixed.
+   */
+  const clipScrollers = (spot: HTMLElement): void => {
+    for (let node = spot.parentElement, depth = 0; node !== null && depth < 12; depth += 1) {
+      if (clipped.has(node)) {
+        node = node.parentElement
+        continue
+      }
+      const style = window.getComputedStyle(node)
+      const scrolls =
+        style.overflowX === 'auto' ||
+        style.overflowX === 'scroll' ||
+        style.overflowY === 'auto' ||
+        style.overflowY === 'scroll'
+      if (scrolls) {
+        clipped.set(node, {
+          overflow: node.style.getPropertyValue('overflow'),
+          priority: node.style.getPropertyPriority('overflow'),
+          top: node.scrollTop,
+          left: node.scrollLeft,
+          owner: spot,
+        })
+        node.style.setProperty('overflow', 'clip')
+      }
+      node = node.parentElement
+    }
+  }
+
+  /** Give the scrollers back, with the offsets they had before the press. */
+  const restoreScrollers = (spot?: HTMLElement): void => {
+    for (const [node, saved] of [...clipped]) {
+      if (spot !== undefined && saved.owner !== spot) continue
+      clipped.delete(node)
+      if (saved.overflow === '') node.style.removeProperty('overflow')
+      else node.style.setProperty('overflow', saved.overflow, saved.priority)
+      node.scrollTop = saved.top
+      node.scrollLeft = saved.left
+    }
+  }
+
   /** Ease a pressed pane back to neutral, then drop the inline transform. */
   const easeBack = (spot: HTMLElement): void => {
     if (!tilted.has(spot)) return
@@ -317,6 +386,7 @@ export function startSpotlight(): () => void {
       // begun its own press, and a global restore would yank that pane's button
       // home mid-rotation.
       restoreFixedGuests(spot)
+      restoreScrollers(spot)
     }, SETTLE_MS)
     settle.set(spot, id)
   }
@@ -406,6 +476,10 @@ export function startSpotlight(): () => void {
         // Any `position: fixed` guest inside this pane is re-anchored BEFORE the
         // first transform lands, so it never has a frame in which to jump.
         liftFixedGuests(spot)
+        // Same reason, for bars rather than guests: an `auto` ancestor turns the
+        // pane's growth into a scrollbar beside the card, so those ancestors stop
+        // being scroll containers for as long as the transform is live.
+        clipScrollers(spot)
         // Rotate about the visible glass center (spot-local, untransformed).
         spot.style.transformOrigin =
           `${local.left + local.width / 2}px ${local.top + local.height / 2}px`
@@ -659,7 +733,10 @@ export function startSpotlight(): () => void {
       }
     }
     // A guest still parked on `<body>` would outlive the theme layer and never go
-    // home, so the whole map is flushed on teardown.
+    // home, so the whole map is flushed on teardown. The same holds for a clipped
+    // scroller: leaving an `overflow: clip` behind would make the box unscrollable
+    // for the rest of the session.
     restoreFixedGuests()
+    restoreScrollers()
   }
 }
